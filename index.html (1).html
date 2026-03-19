@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>👑 AI OWNER WORLD v7</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--c:#00ffd0;--r:#ff4455;--g:#ffd700;--b:#5599ff;--bg:#040810;--pn:#060c18;--br:#00ffd018}
+html,body{height:100%;overflow:hidden;touch-action:none}
+body{background:var(--bg);color:var(--c);font-family:'Share Tech Mono',monospace;font-size:11px}
+
+/* ── SCREENS ── */
+.screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center}
+#scSelect{background:radial-gradient(ellipse at 50% 40%,#0b1830 0%,var(--bg) 100%);gap:14px}
+#scSetup{background:var(--bg);gap:14px}
+#scGame{flex-direction:row;overflow:hidden}
+.screen.active{display:flex}
+
+/* ── WORLD SELECT ── */
+.ws-title{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;letter-spacing:6px;text-shadow:0 0 28px var(--c);color:#fff}
+.ws-sub{letter-spacing:2px;color:#00ffd038;font-size:10px}
+.worlds-grid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:700px;max-height:300px;overflow-y:auto;padding:4px}
+.world-card{background:var(--pn);border:1px solid var(--br);padding:10px 12px;cursor:pointer;min-width:145px;transition:all .14s;position:relative}
+.world-card:hover,.world-card:active{border-color:var(--c);background:#091220;box-shadow:0 0 12px #00ffd020}
+.wc-name{font-family:'Orbitron',monospace;font-size:11px;color:#fff;margin-bottom:2px}
+.wc-meta{color:#00ffd045;font-size:8.5px}
+.wc-biome{font-size:17px;margin-bottom:3px}
+.wc-actions{display:flex;gap:3px;margin-top:5px}
+.wc-actions button{padding:2px 4px;font-size:8px}
+.world-new{border-style:dashed;opacity:.5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:85px}
+.world-new:hover,.world-new:active{opacity:1}
+
+/* ── MODALS ── */
+.modal-overlay{position:fixed;inset:0;background:#000000b8;z-index:9000;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:#06101e;border:1px solid var(--c);padding:18px;min-width:260px;max-width:480px;box-shadow:0 0 40px #00ffd015;max-height:92vh;overflow-y:auto}
+.modal-box h3{font-family:'Orbitron',monospace;font-size:12px;margin-bottom:10px;color:#fff}
+.modal-box input,.modal-box select{width:100%;background:#040810;color:var(--c);border:1px solid #00ffd028;padding:6px;font-family:'Share Tech Mono',monospace;font-size:11px;margin-bottom:8px;outline:none}
+.modal-box input:focus,.modal-box select:focus{border-color:var(--c)}
+.modal-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:6px}
+.modal-actions button{padding:5px 14px;font-size:10px}
+#storyText{color:#aaeedd;font-size:10px;line-height:1.9;white-space:pre-wrap;max-height:58vh;overflow-y:auto;border-top:1px solid var(--br);padding-top:8px;margin-top:4px}
+
+/* ── PLAY SETUP ── */
+.setup-card{background:var(--pn);border:1px solid var(--br);padding:18px 22px;min-width:290px;max-width:400px}
+.setup-card h3{font-family:'Orbitron',monospace;font-size:14px;color:#fff;margin-bottom:14px}
+.setup-label{color:#aaeedd;font-size:10px;margin-bottom:3px}
+.setup-row{margin-bottom:10px}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.role-btn{background:var(--bg);border:1px solid var(--br);padding:8px 6px;cursor:pointer;text-align:center;font-family:'Share Tech Mono',monospace;font-size:9px;transition:all .12s;border-radius:3px}
+.role-btn:hover,.role-btn.selected{border-color:var(--c);background:#091220;color:#fff}
+.role-btn .ri{font-size:16px;display:block;margin-bottom:3px}
+
+/* ── SIDEBAR ── */
+#sidebar{width:170px;min-width:170px;background:var(--pn);border-right:1px solid var(--br);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#00ffd010 transparent}
+.sb-s{border-bottom:1px solid var(--br);padding:5px 7px}
+.sb-t{font-family:'Orbitron',monospace;font-size:7px;letter-spacing:2px;color:#00ffd040;margin-bottom:4px;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+.sb-t span{color:#00ffd030;font-size:8px}
+.sb-body{overflow:hidden;transition:max-height .2s}
+.sb-body.collapsed{max-height:0!important}
+.sr{display:flex;justify-content:space-between;margin:2px 0;color:#aaeedd;font-size:9px}
+.sv{color:var(--c);font-weight:bold;font-size:9px}
+.dbar{background:#0a1020;height:5px;margin:3px 0;border:1px solid #00ffd010;overflow:hidden}
+.dbar-fill{height:100%;transition:width .4s}
+
+/* ── BUTTONS ── */
+button{background:var(--pn);color:var(--c);border:1px solid #00ffd025;padding:4px 5px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:.4px;transition:all .12s;user-select:none}
+button:hover{background:#00ffd00e;border-color:var(--c);box-shadow:0 0 5px #00ffd020}
+button:active{background:#00ffd018}
+.bd{border-color:#ff444425;color:#ff6666}.bd:hover{background:#ff00000e;border-color:#ff4444}
+.bg{border-color:#ffd70025;color:#ffd700}.bg:hover{background:#ffd7000e;border-color:#ffd700}
+.bp{border-color:#bb88ff25;color:#bb88ff}.bp:hover{background:#bb88ff0e;border-color:#bb88ff}
+.bfull{width:100%;margin-bottom:2px;text-align:left}
+.bgrid{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.bgrid .w2{grid-column:1/-1}
+
+/* ── CMD INPUT ── */
+#cmdInput{width:100%;background:#040810;color:var(--c);border:1px solid #00ffd020;padding:4px 5px;font-family:'Share Tech Mono',monospace;font-size:9px;outline:none;margin-bottom:2px}
+#cmdInput:focus{border-color:var(--c)}
+.cmdhelp{color:#00ffd028;font-size:7.5px;line-height:1.6}
+
+/* ── CENTER ── */
+#center{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+#topbar{background:var(--pn);border-bottom:1px solid var(--br);padding:3px 8px;display:flex;align-items:center;gap:7px;min-height:26px;flex-wrap:wrap}
+#topbar .wname{font-family:'Orbitron',monospace;font-size:11px;color:#fff}
+#topbar .dinfo{font-size:9.5px;color:#00ffd065}
+.malert{color:#ff4455;font-size:9.5px;font-weight:bold;animation:blink .5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+canvas{display:block;flex:1;min-height:0}
+#replayBar{background:var(--pn);border-top:1px solid var(--br);padding:2px 7px;display:flex;align-items:center;gap:5px;font-size:9px}
+#replayBar input[type=range]{flex:1;accent-color:var(--c)}
+#chatArea{height:110px;display:flex;flex-direction:column;border-top:1px solid var(--br)}
+#chatLog{flex:1;overflow-y:auto;padding:4px 7px;background:#030710;font-size:9.5px;line-height:1.7;scrollbar-width:thin;scrollbar-color:#00ffd010 transparent}
+#chatInput{display:flex;border-top:1px solid var(--br)}
+#chatInput input{flex:1;background:#040810;color:var(--c);border:none;padding:4px 7px;font-family:'Share Tech Mono',monospace;font-size:10px;outline:none}
+#chatInput button{padding:4px 10px;border:none;border-left:1px solid var(--br)}
+
+/* ── PLAY HUD ── */
+#playHUD{position:absolute;inset:0;pointer-events:none;display:none}
+#playHUD.active{display:block}
+#pStats{position:absolute;top:30px;left:6px;background:rgba(0,5,16,.82);border:1px solid #00ffd040;padding:7px 9px;font-size:9.5px;min-width:140px;pointer-events:none;border-radius:4px}
+#pStats .pl{font-family:'Orbitron',monospace;font-size:8px;color:#fff;margin-bottom:4px;letter-spacing:1px}
+.pbar{height:5px;margin:2px 0;background:#111;border:1px solid #00ffd015;border-radius:2px;overflow:hidden}
+.pbar-f{height:100%;transition:width .2s;border-radius:2px}
+#pActionBar{position:absolute;bottom:115px;left:50%;transform:translateX(-50%);display:flex;gap:5px;pointer-events:auto;flex-wrap:wrap;justify-content:center;max-width:420px}
+.pab{padding:7px 10px;font-size:10px;border-radius:4px;min-width:52px;text-align:center;background:rgba(0,5,16,.85);border:1px solid var(--c);color:var(--c);cursor:pointer;user-select:none;-webkit-user-select:none}
+.pab:active{background:#00ffd020}
+.pab.red{border-color:#ff4455;color:#ff4455}.pab.gold{border-color:#ffd700;color:#ffd700}.pab.grn{border-color:#55ff99;color:#55ff99}.pab.blue{border-color:#5599ff;color:#5599ff}.pab.prp{border-color:#bb88ff;color:#bb88ff}
+#pcHint{position:absolute;bottom:118px;right:6px;background:rgba(0,5,16,.75);border:1px solid #00ffd025;padding:5px 7px;font-size:8px;color:#00ffd055;pointer-events:none;line-height:1.7;max-width:150px}
+
+/* ── MOBILE JOYSTICK ── */
+#mobZone{position:absolute;bottom:115px;left:8px;width:115px;height:115px;pointer-events:auto}
+#jBase{position:absolute;inset:0;border-radius:50%;background:rgba(0,255,208,.07);border:2px solid #00ffd035}
+#jThumb{position:absolute;width:38px;height:38px;border-radius:50%;background:rgba(0,255,208,.4);border:2px solid var(--c);top:38px;left:38px}
+
+/* LOG COLORS */
+.ck{color:#ff5555}.cb{color:#55ff99}.cbu{color:#5599ff}.ce{color:#ffdd55}.ca{color:#ffd700}
+.co{color:#ff88ff}.cai{color:#aaeedd}.cm{color:#ff4455}.cs{color:#00ffd050}.cn{color:#8888ff}
+.cy{color:#ff88ff}.cgr{color:#ff7733}.czk{color:#ff9900}.czoo{color:#aaffaa}.cst{color:#cc88ff}
+.cd{color:#ff99dd}
+</style>
+</head>
+<body>
+
+<!-- WORLD SELECT -->
+<div id="scSelect" class="screen active">
+  <div class="ws-title">👑 AI OWNER WORLD</div>
+  <div class="ws-sub">// v7 — ROLES · LIBRARY · ZOO · TEAMS · STORIES //</div>
+  <div class="worlds-grid" id="worldsGrid"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+    <button class="bg" onclick="openNewModal()" style="padding:8px 18px;font-size:11px">＋ New World</button>
+    <button class="bp" onclick="goSetup()" style="padding:8px 18px;font-size:11px">🎮 Play Mode</button>
+  </div>
+</div>
+
+<!-- PLAY SETUP -->
+<div id="scSetup" class="screen">
+  <div class="setup-card">
+    <h3>🎮 PLAY MODE SETUP</h3>
+    <div class="setup-row">
+      <div class="setup-label">Your Name — one letter + 3 digits (e.g. K247)</div>
+      <input id="pNameIn" maxlength="4" placeholder="K247" style="width:100%;background:#040810;color:var(--c);border:1px solid #00ffd028;padding:7px;font-family:'Share Tech Mono',monospace;font-size:15px;margin-bottom:4px;outline:none;text-transform:uppercase;letter-spacing:3px">
+    </div>
+    <div class="setup-row">
+      <div class="setup-label">Role — determines your abilities</div>
+      <div class="role-grid" id="roleGrid"></div>
+    </div>
+    <div class="setup-row">
+      <div class="setup-label">Difficulty</div>
+      <select id="pDiffIn" style="width:100%;background:#040810;color:var(--c);border:1px solid #00ffd028;padding:6px;font-family:'Share Tech Mono',monospace;margin-bottom:6px;outline:none">
+        <option value="easy">😊 Easy — more food, no monsters</option>
+        <option value="normal" selected>😐 Normal</option>
+        <option value="hard">😈 Hard — scarce food, monsters</option>
+      </select>
+    </div>
+    <div class="setup-row">
+      <div class="setup-label">Biome</div>
+      <select id="pBiomeIn" style="width:100%;background:#040810;color:var(--c);border:1px solid #00ffd028;padding:6px;font-family:'Share Tech Mono',monospace;margin-bottom:6px;outline:none">
+        <option value="forest">🌲 Forest</option>
+        <option value="desert">🏜️ Desert</option>
+        <option value="tundra">❄️ Tundra</option>
+        <option value="cyber">🌆 Cyberpunk</option>
+        <option value="lava">🌋 Lava</option>
+        <option value="ocean">🌊 Ocean Isles</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:7px;margin-top:4px">
+      <button onclick="goScreen('scSelect')" style="flex:1;padding:8px">← Back</button>
+      <button onclick="startPlay()" class="bg" style="flex:2;padding:8px">▶ START</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div id="modalNew" class="modal-overlay">
+  <div class="modal-box">
+    <h3 id="modalTitle">✦ New World</h3>
+    <input id="modalName" placeholder="World name..." maxlength="24">
+    <select id="modalBiome">
+      <option value="forest">🌲 Forest</option>
+      <option value="desert">🏜️ Desert</option>
+      <option value="tundra">❄️ Tundra</option>
+      <option value="cyber">🌆 Cyberpunk</option>
+      <option value="lava">🌋 Lava</option>
+      <option value="ocean">🌊 Ocean Isles</option>
+    </select>
+    <div class="modal-actions">
+      <button onclick="closeModal('modalNew')" class="bd">Cancel</button>
+      <button id="modalOk" class="bg">Create</button>
+    </div>
+  </div>
+</div>
+<div id="modalInvite" class="modal-overlay">
+  <div class="modal-box">
+    <h3>🤝 Team Invite!</h3>
+    <p id="inviteText" style="color:#aaeedd;font-size:11px;margin-bottom:12px;line-height:1.6"></p>
+    <div class="modal-actions">
+      <button onclick="respondInvite(false)" class="bd">Decline</button>
+      <button onclick="respondInvite(true)" class="bg">✔ Accept</button>
+    </div>
+  </div>
+</div>
+<div id="modalStory" class="modal-overlay">
+  <div class="modal-box" style="max-width:520px">
+    <h3 id="storyTitle">📖 Story</h3>
+    <div id="storyText"></div>
+    <div class="modal-actions"><button onclick="closeModal('modalStory')">Close</button></div>
+  </div>
+</div>
+
+<!-- MAIN GAME -->
+<div id="scGame" class="screen">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <!-- WORLD STATS -->
+    <div class="sb-s">
+      <div class="sb-t" onclick="toggleSb(this)">◈ WORLD <span>▾</span></div>
+      <div class="sb-body" style="max-height:160px">
+        <div class="sr"><span>AIs</span><span class="sv" id="stPop">0</span></div>
+        <div class="sr"><span>Animals</span><span class="sv" id="stAnim">0</span></div>
+        <div class="sr"><span>Food</span><span class="sv" id="stFood">0</span></div>
+        <div class="sr"><span>Builds</span><span class="sv" id="stBuilds">0</span></div>
+        <div class="sr"><span>Teams</span><span class="sv" id="stTeams">0</span></div>
+        <div class="sr"><span>Stories</span><span class="sv" id="stStories">0</span></div>
+        <div class="sr"><span>Day</span><span class="sv" id="stDay">1</span></div>
+        <div class="sr"><span>Gen</span><span class="sv" id="stGen">1</span></div>
+      </div>
+    </div>
+    <!-- FACTIONS -->
+    <div class="sb-s">
+      <div class="sb-t" onclick="toggleSb(this)">◈ FACTIONS <span>▾</span></div>
+      <div class="sb-body" style="max-height:200px">
+        <div class="sr"><span>🔴 Aggro</span><span class="sv" id="stAgg">0</span></div>
+        <div class="sr"><span>🔵 Builder</span><span class="sv" id="stBld">0</span></div>
+        <div class="sr"><span>🟢 Social</span><span class="sv" id="stSoc">0</span></div>
+        <div class="sr"><span>🟣 Explorer</span><span class="sv" id="stExp">0</span></div>
+        <div class="sr"><span>💀 Griefer</span><span class="sv" id="stGrf">0</span></div>
+        <div class="sr"><span>👮 Cop</span><span class="sv" id="stCop">0</span></div>
+        <div class="sr"><span>🏥 Doctor</span><span class="sv" id="stDoc">0</span></div>
+        <div class="sr"><span>📚 Author</span><span class="sv" id="stAut">0</span></div>
+        <div class="sr"><span>🏛 Librarian</span><span class="sv" id="stLib">0</span></div>
+        <div class="sr"><span>⛔ Banned</span><span class="sv" id="stBan">0</span></div>
+      </div>
+    </div>
+    <!-- INSTITUTIONS -->
+    <div class="sb-s">
+      <div class="sb-t" onclick="toggleSb(this)">◈ BUILDINGS <span>▾</span></div>
+      <div class="sb-body" style="max-height:160px">
+        <div class="sr"><span>🏫 School</span><span class="sv" id="stSchool">—</span></div>
+        <div class="sr"><span>🏛 Prison</span><span class="sv" id="stPrison">—</span></div>
+        <div class="sr"><span>🛒 Shop</span><span class="sv" id="stShop">—</span></div>
+        <div class="sr"><span>🎮 Arcade</span><span class="sv" id="stArcade">—</span></div>
+        <div class="sr"><span>🐖 Zoo</span><span class="sv" id="stZoo">—</span></div>
+        <div class="sr"><span>🏥 Hospital</span><span class="sv" id="stHosp">—</span></div>
+        <div class="sr"><span>📚 Library</span><span class="sv" id="stLibStat">—</span></div>
+      </div>
+    </div>
+    <!-- DAY CYCLE -->
+    <div class="sb-s">
+      <div class="sb-t">◈ DAY CYCLE</div>
+      <div class="dbar" style="margin:4px 0"><div class="dbar-fill" id="dayBar" style="width:0%;background:#ffd700"></div></div>
+      <div id="dayLabel" style="color:#00ffd050;font-size:8.5px;text-align:center">Day 1 — Dawn</div>
+    </div>
+    <!-- MONSTER -->
+    <div class="sb-s" id="monsterPanel" style="display:none">
+      <div class="sb-t" style="color:#ff4455">◈ MONSTER</div>
+      <div id="monsterName" style="color:#ff4455;font-size:10px;margin-bottom:2px"></div>
+      <div id="monsterDesc" style="color:#ff664450;font-size:8px;line-height:1.5;white-space:pre-wrap"></div>
+      <div class="dbar" id="monHPWrap" style="display:none;margin-top:3px"><div class="dbar-fill" id="monHPBar" style="width:100%;background:#ff4455"></div></div>
+    </div>
+    <!-- TEAMS -->
+    <div class="sb-s">
+      <div class="sb-t" onclick="toggleSb(this)">◈ TEAMS <span>▾</span></div>
+      <div class="sb-body" style="max-height:85px"><div id="teamsUI" style="font-size:8.5px;overflow-y:auto;max-height:80px"></div></div>
+    </div>
+    <!-- STORIES -->
+    <div class="sb-s">
+      <div class="sb-t" onclick="toggleSb(this)">◈ STORIES <span>▾</span></div>
+      <div class="sb-body" style="max-height:70px"><div id="storiesUI" style="font-size:8.5px;overflow-y:auto;max-height:65px"></div></div>
+      <button class="bfull" style="margin-top:3px" onclick="showLatestStory()">📖 Latest</button>
+    </div>
+    <!-- SPAWN -->
+    <div class="sb-s">
+      <div class="sb-t" onclick="toggleSb(this)">◈ SPAWN <span>▾</span></div>
+      <div class="sb-body" style="max-height:130px">
+        <div class="bgrid">
+          <button onclick="spawnAI()">⊕ AI</button>
+          <button onclick="spawnFood(6)">◉ Food</button>
+          <button onclick="spawnMany()">⊕⊕ Swarm</button>
+          <button onclick="spawnFood(30)">◉◉ Feast</button>
+          <button onclick="spawnAI({personality:'griefer'})" class="bd w2">💀 Griefer</button>
+          <button onclick="spawnAI({personality:'author'})" class="w2">📚 Author</button>
+          <button onclick="spawnAI({personality:'doctor'})" class="w2">🏥 Doctor</button>
+        </div>
+      </div>
+    </div>
+    <!-- OWNER POWERS -->
+    <div class="sb-s">
+      <div class="sb-t" onclick="toggleSb(this)">◈ POWERS <span>▾</span></div>
+      <div class="sb-body" style="max-height:240px">
+        <button class="bfull bd" onclick="ownerCmd('killall')">☠ Kill All</button>
+        <button class="bfull bg" onclick="ownerCmd('adminall')">★ Admin All</button>
+        <button class="bfull" onclick="ownerCmd('healall')">💊 Heal All</button>
+        <button class="bfull" onclick="ownerCmd('feedall')">🍖 Feed All</button>
+        <button class="bfull" onclick="ownerCmd('peace')">☮ Stop Wars</button>
+        <button class="bfull" onclick="ownerCmd('releaseall')">🔓 Free Prison</button>
+        <button class="bfull" onclick="ownerCmd('nukebuilds')">💣 Nuke Builds</button>
+        <button class="bfull" onclick="ownerCmd('disbandall')">💔 Disband Teams</button>
+        <button class="bfull" onclick="ownerCmd('clearbans')">↩ Clear Bans</button>
+        <button class="bfull bd" onclick="ownerCmd('killmonster')">⚔ Slay Monster</button>
+        <button class="bfull" onclick="ownerCmd('skipnight')">⏭ Force Dawn</button>
+        <button class="bfull" onclick="ownerCmd('skipday')">🌑 Force Night</button>
+        <button class="bfull" onclick="ownerCmd('spawnzoo')">🐾 Fill Zoo</button>
+        <button class="bfull bg" onclick="goScreen('scSelect')">🌍 Worlds</button>
+        <button class="bfull bp" onclick="goSetup()">🎮 Play Mode</button>
+      </div>
+    </div>
+    <!-- COMMANDS -->
+    <div class="sb-s">
+      <div class="sb-t" onclick="toggleSb(this)">◈ COMMANDS <span>▾</span></div>
+      <div class="sb-body" style="max-height:120px">
+        <input id="cmdInput" placeholder="/help..." onkeydown="if(event.key==='Enter')runCmd()">
+        <div class="cmdhelp">/kill /ban /admin /heal /feed<br>/freeze /tp /msg /give /rename<br>/setpers /arrest /release /setage<br>/addmoney /summon /weather<br>/rewind N  /story  /dismiss</div>
+      </div>
+    </div>
+    <!-- SIM -->
+    <div class="sb-s">
+      <div class="sb-t">◈ SIM</div>
+      <div style="display:flex;align-items:center;gap:4px;margin-bottom:3px">
+        <span style="font-size:8px;color:#00ffd040">Spd</span>
+        <input type="range" id="speedSlider" min="1" max="6" value="2" style="flex:1;accent-color:var(--c)">
+        <button id="pauseBtn" onclick="togglePause()" style="padding:3px 7px">⏸</button>
+      </div>
+      <button class="bfull" onclick="saveWorld()">💾 Save</button>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div id="center">
+    <div id="topbar">
+      <span class="wname" id="tbWorldName">World</span>
+      <span class="dinfo" id="tbDayInfo">Day 1</span>
+      <span class="malert" id="monsterAlert" style="display:none">⚠ MONSTER!</span>
+      <span id="grpAlert" style="display:none;color:#ff8800;font-size:9px;animation:blink .7s infinite"></span>
+      <span id="playTag" style="display:none;color:#bb88ff;font-size:9px;font-weight:bold">🎮 PLAY</span>
+      <button onclick="goScreen('scSelect')" style="margin-left:auto;font-size:9px;padding:2px 6px">🌍</button>
+    </div>
+    <canvas id="world"></canvas>
+    <div id="replayBar">
+      <span style="color:#00ffd045;font-size:8px">⏪ REWIND</span>
+      <input type="range" id="replaySlider" min="0" max="0" value="0">
+      <span id="replayTick" style="color:#00ffd055;min-width:36px;font-size:8.5px">T:0</span>
+      <button id="replayBtn" onclick="toggleReplay()" style="font-size:8.5px;padding:2px 6px">LIVE</button>
+    </div>
+    <div id="chatArea">
+      <div id="chatLog"></div>
+      <div id="chatInput">
+        <input id="chatMsg" placeholder="Chat with AIs… (Enter to send)" onkeydown="if(event.key==='Enter')sendChat()">
+        <button onclick="sendChat()">SEND</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAY HUD (overlay) -->
+  <div id="playHUD">
+    <div id="pStats">
+      <div class="pl" id="pNameLbl">PLAYER</div>
+      <div style="font-size:8px;color:#aaeedd">HP</div>
+      <div class="pbar"><div class="pbar-f" id="pHPBar" style="width:100%;background:#44ff88"></div></div>
+      <div style="font-size:8px;color:#aaeedd;margin-top:3px">Hunger</div>
+      <div class="pbar"><div class="pbar-f" id="pHungerBar" style="width:100%;background:#ff8844"></div></div>
+      <div style="font-size:8.5px;color:#aaeedd;margin-top:3px">💰 <span id="pMoney">0</span> | Age <span id="pAge">0</span></div>
+      <div style="font-size:8.5px;color:#aaeedd;margin-top:1px">Team: <span id="pTeamLbl" style="color:#ffd700">None</span></div>
+      <div style="font-size:8px;color:#00ffd060;margin-top:1px" id="pRoleLbl"></div>
+    </div>
+    <!-- Context action bar -->
+    <div id="pActionBar"></div>
+    <div id="pcHint">WASD: Move<br>E: Attack<br>R-click: Build<br>L-click: Destroy<br>F: Pay nearby<br>G: Team action<br>H: Heal self</div>
+    <!-- Mobile joystick -->
+    <div id="mobZone" style="display:none">
+      <div id="jBase"></div>
+      <div id="jThumb"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// CONSTANTS  (keep SK = v6 so worlds survive)
+// ════════════════════════════════════════════════
+const SK = 'aiOwnerWorlds_v6'   // ← unchanged: preserves saved worlds
+const DAY_LEN=5000, NIGHT_S=.56, NIGHT_E=.06, MAX_AI=130
+const SNAP_EVERY=60, MAX_SNAP=80
+const SCHOOL_IN=.10, SCHOOL_OUT=.35
+const ARCADE_IN=.36, ARCADE_OUT=.55
+const SHOP_OPEN=.15, SHOP_CLOSE=.70
+const LIB_IN=.15, LIB_OUT=.60
+const MAX_BLD_LV=7
+const TEAM_COLORS=['#ff6644','#44aaff','#44ff88','#ffcc44','#cc44ff','#ff44aa','#44ffcc','#ffaa44','#66ff44','#44ccff']
+const TNAME_A=['Red','Blue','Green','Gold','Purple','Pink','Teal','Orange','Lime','Cyan']
+const TNAME_B=['Wolves','Eagles','Foxes','Bears','Lions','Sharks','Hawks','Cobras','Vipers','Tigers']
+
+// All roles available in play mode
+const ROLES=[
+  {id:'social',    icon:'🟢', label:'Social',    desc:'Tame animals · Invite to teams · Give items'},
+  {id:'aggressive',icon:'🔴', label:'Fighter',   desc:'Attack AIs · Steal food · Gain XP'},
+  {id:'builder',   icon:'🔵', label:'Builder',   desc:'Build structures · Upgrade base · Repair'},
+  {id:'explorer',  icon:'🟣', label:'Explorer',  desc:'Discover map · Find animals · Earn money'},
+  {id:'cop',       icon:'👮', label:'Cop',        desc:'Arrest criminals · Patrol prison'},
+  {id:'doctor',    icon:'🏥', label:'Doctor',    desc:'Heal AIs · Give birth at hospital'},
+  {id:'author',    icon:'📚', label:'Author',    desc:'Write stories · Visit library'},
+  {id:'zookeeper', icon:'🐾', label:'Zookeeper', desc:'Return escaped animals · Care for zoo'},
+]
+
+// ════════════════════════════════════════════════
+// WORLD MANAGER
+// ════════════════════════════════════════════════
+function loadAllWorlds(){try{return JSON.parse(localStorage.getItem(SK))||[]}catch{return[]}}
+function saveAllWorlds(w){try{localStorage.setItem(SK,JSON.stringify(w))}catch{}}
+let allWorlds=loadAllWorlds(), modalMode='create', editWorldId=null
+
+const BIOME_EMOJI={forest:'🌲',desert:'🏜️',tundra:'❄️',cyber:'🌆',lava:'🌋',ocean:'🌊'}
+const BIOMES={
+  forest:{skyTop:['#0d2010','#1a4a25','#3a8a3a','#8abf55'],skyBot:['#060f08','#0f2812','#2a6030','#5a9030'],ground:'#1a3015',tree:'🌲',treeDens:18,foodColor:'#44ff66',wColor:'#1155aa',wAlpha:.82},
+  desert:{skyTop:['#402010','#804020','#c07030','#ffa030'],skyBot:['#200a05','#401808','#703010','#b05020'],ground:'#6a3a10',tree:'🌵',treeDens:7,foodColor:'#ddaa44',wColor:'#2288bb',wAlpha:.7},
+  tundra:{skyTop:['#151828','#283860','#4060a8','#80aad8'],skyBot:['#080c14','#141c30','#203050','#4070a0'],ground:'#c8d8ec',tree:'❄️',treeDens:12,foodColor:'#88ffee',wColor:'#1040a8',wAlpha:.88},
+  cyber:{skyTop:['#080012','#100028','#1a0040','#280060'],skyBot:['#040008','#080014','#0d0020','#160040'],ground:'#0c0c1c',tree:'🏢',treeDens:20,foodColor:'#ff00ff',wColor:'#001a44',wAlpha:.85},
+  lava:{skyTop:['#300008','#600010','#a00020','#d00030'],skyBot:['#150005','#300008','#500010','#800020'],ground:'#2a0808',tree:'🌋',treeDens:6,foodColor:'#ff7700',wColor:'#882200',wAlpha:.75},
+  ocean:{skyTop:['#082030','#104060','#2070a0','#50a0d0'],skyBot:['#041018','#082030','#104060','#2080c0'],ground:'#0a2818',tree:'🌴',treeDens:11,foodColor:'#44ffcc',wColor:'#0a48a8',wAlpha:.9}
+}
+
+function renderWorldSelect(){
+  const g=document.getElementById('worldsGrid');g.innerHTML=''
+  allWorlds.forEach(w=>{
+    const c=document.createElement('div');c.className='world-card'
+    c.innerHTML=`<div class="wc-biome">${BIOME_EMOJI[w.biome]||'🌍'}</div><div class="wc-name">${w.name}</div><div class="wc-meta">Day ${w.day||1} · ${w.population||0} AIs</div><div class="wc-actions"><button onclick="event.stopPropagation();openRenameModal('${w.id}')">✏</button><button onclick="event.stopPropagation();deleteWorld('${w.id}')" class="bd">🗑</button></div>`
+    c.addEventListener('click',()=>loadWorld(w.id));g.appendChild(c)
+  })
+  const nc=document.createElement('div');nc.className='world-card world-new'
+  nc.innerHTML='<div style="font-size:22px">＋</div><div style="font-size:9px">New World</div>'
+  nc.addEventListener('click',openNewModal);g.appendChild(nc)
+}
+
+function goScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'))
+  document.getElementById(id).classList.add('active')
+}
+function goSetup(){buildRoleGrid();goScreen('scSetup')}
+
+function openNewModal(){
+  modalMode='create';editWorldId=null
+  document.getElementById('modalTitle').textContent='✦ New World'
+  document.getElementById('modalName').value=''
+  document.getElementById('modalOk').textContent='Create'
+  document.getElementById('modalOk').onclick=confirmModal
+  document.getElementById('modalNew').classList.add('show')
+  setTimeout(()=>document.getElementById('modalName').focus(),50)
+}
+function openRenameModal(id){
+  modalMode='rename';editWorldId=id
+  const w=allWorlds.find(x=>x.id===id)
+  document.getElementById('modalTitle').textContent='✏ Rename'
+  document.getElementById('modalName').value=w?.name||''
+  document.getElementById('modalOk').textContent='Save'
+  document.getElementById('modalOk').onclick=confirmModal
+  document.getElementById('modalNew').classList.add('show')
+  setTimeout(()=>document.getElementById('modalName').focus(),50)
+}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+function confirmModal(){
+  const name=document.getElementById('modalName').value.trim()||'Unnamed'
+  const biome=document.getElementById('modalBiome').value
+  if(modalMode==='create'){
+    const w={id:'w'+Date.now(),name,biome,day:1,tick:0,population:0}
+    allWorlds.push(w);saveAllWorlds(allWorlds);closeModal('modalNew');renderWorldSelect();loadWorld(w.id)
+  }else{
+    const w=allWorlds.find(x=>x.id===editWorldId)
+    if(w){w.name=name;saveAllWorlds(allWorlds)}
+    closeModal('modalNew');renderWorldSelect()
+  }
+}
+function deleteWorld(id){if(!confirm('Delete world? This is permanent.'))return;allWorlds=allWorlds.filter(w=>w.id!==id);saveAllWorlds(allWorlds);renderWorldSelect()}
+document.getElementById('modalName').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('modalOk').click()})
+function toggleSb(title){const body=title.nextElementSibling;body.classList.toggle('collapsed');title.querySelector('span').textContent=body.classList.contains('collapsed')?'▸':'▾'}
+
+// Build role selector
+let selectedRole='social'
+function buildRoleGrid(){
+  const g=document.getElementById('roleGrid');g.innerHTML=''
+  ROLES.forEach(r=>{
+    const b=document.createElement('div');b.className='role-btn'+(r.id===selectedRole?' selected':'')
+    b.innerHTML=`<span class="ri">${r.icon}</span>${r.label}<div style="color:#00ffd045;font-size:7.5px;margin-top:2px">${r.desc.split('·')[0].trim()}</div>`
+    b.onclick=()=>{selectedRole=r.id;buildRoleGrid()}
+    g.appendChild(b)
+  })
+}
+
+// ════════════════════════════════════════════════
+// SIM STATE
+// ════════════════════════════════════════════════
+const canvas=document.getElementById('world'),ctx=canvas.getContext('2d')
+let W=800,H=450
+let AIs=[],foods=[],builds=[],banned=new Set(),admins=new Set()
+let teams=[],waters=[],animals=[],particles=[],stories=[]
+let monster=null,paused=false,simSpeed=2
+let tickCount=0,generation=1,dayNum=1,dayPhase=0
+let nightMonsterSpawned=false,flashlights=[]
+let lastFoodTick=0,worldBiome='forest',worldName='World',worldId=null
+let texCanvas=null,stars=[],weatherType='clear',weatherTimer=0
+let frozenAIs=new Set(),teamColorIdx=0
+let snapshots=[],replayMode=false,replayIdx=0
+let institutions={}
+let lifeEvents={}
+// PLAY
+let playMode=false,playerAI=null,playerDiff='normal',playerRole='social'
+let pendingInvite=null,joyVX=0,joyVY=0
+const isMobile='ontouchstart' in window
+
+// ════════════════════════════════════════════════
+// AUDIO
+// ════════════════════════════════════════════════
+let audioCtx
+function ga(){if(!audioCtx)try{audioCtx=new(window.AudioContext||window.webkitAudioContext)()}catch{}; return audioCtx}
+function beep(f=440,d=.14,v=.06,t='sine'){try{const a=ga();if(!a)return;const o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=f;o.type=t;g.gain.setValueAtTime(v,a.currentTime);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+d);o.start();o.stop(a.currentTime+d)}catch{}}
+function playBorn(){beep(700,.09,.05);setTimeout(()=>beep(900,.09,.04),65)}
+function playDie(){beep(140,.45,.07,'sawtooth')}
+function playMonster(){beep(55,1.1,.12,'sawtooth');setTimeout(()=>beep(40,.8,.08,'sawtooth'),320)}
+function playBuild(){beep(220,.13,.04);setTimeout(()=>beep(330,.1,.03),90)}
+function playTeam(){beep(660,.09,.04);setTimeout(()=>beep(880,.13,.05),70);setTimeout(()=>beep(1100,.09,.03),140)}
+function playGrief(){beep(100,.25,.07,'sawtooth')}
+function playCash(){beep(1200,.07,.05);setTimeout(()=>beep(1500,.07,.04),60)}
+function playArrest(){beep(200,.2,.06,'square');beep(150,.3,.05,'square')}
+function playStory(){beep(600,.1,.05,'triangle');setTimeout(()=>beep(800,.15,.06,'triangle'),120)}
+function playHeal(){beep(600,.1,.04,'triangle');beep(800,.1,.04,'triangle')}
+
+// ════════════════════════════════════════════════
+// LOG
+// ════════════════════════════════════════════════
+const chatLog=document.getElementById('chatLog')
+function log(txt,cls='cs'){const d=document.createElement('div');d.className=cls;d.textContent=`[${tickCount}] ${txt}`;chatLog.appendChild(d);while(chatLog.children.length>500)chatLog.removeChild(chatLog.firstChild);chatLog.scrollTop=chatLog.scrollHeight}
+
+// ════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════
+function rand(a,b){return Math.random()*(b-a)+a}
+function dist(a,b){const dx=a.x-b.x,dy=a.y-b.y;return Math.sqrt(dx*dx+dy*dy)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function pick(arr){return arr[Math.floor(rand(0,arr.length))]}
+function lerpC(c1,c2,t){const h=s=>parseInt(s,16);const r1=h(c1.slice(1,3)),g1=h(c1.slice(3,5)),b1=h(c1.slice(5,7)),r2=h(c2.slice(1,3)),g2=h(c2.slice(3,5)),b2=h(c2.slice(5,7));return`rgb(${Math.round(r1+(r2-r1)*t)},${Math.round(g1+(g2-g1)*t)},${Math.round(b1+(b2-b1)*t)})`}
+function isInWater(x,y){return waters.some(w=>x>w.x&&x<w.x+w.w&&y>w.y&&y<w.y+w.h)}
+function nearInst(inst,x,y,pad=25){if(!inst)return false;return x>inst.x-pad&&x<inst.x+inst.w+pad&&y>inst.y-pad&&y<inst.y+inst.h+pad}
+const NP='ZXQTRPLMNVYKWFHDBGCSJR'
+function nameGen(){return NP[Math.floor(rand(0,NP.length))]+Math.floor(rand(100,999))}
+function isNight(){return dayPhase>NIGHT_S||dayPhase<NIGHT_E}
+function sel(id){return document.getElementById(id)}
+function setText(id,v){const e=sel(id);if(e)e.textContent=v}
+
+// ════════════════════════════════════════════════
+// PHRASES
+// ════════════════════════════════════════════════
+const PH={
+  aggressive:['I will crush you!','No mercy!','DESTROY!','Power is mine!','Fear me!','Bow down!','You cannot stop me!','Strength is everything!','I was born to fight!','Feel my wrath!'],
+  builder:['Building is life!','My base grows!','Expand!','Stone by stone!','Progress!','Architecture!','Every block placed with purpose!','This will last forever!','One more level up!','My masterpiece nears completion!'],
+  social:['Hello friend!','Join us!','Together we win!','We are family!','Stay close!','Group up!','The more the merrier!','Friends are everything!','Let\'s grow together!','Strength in numbers!'],
+  explorer:['Uncharted territory!','What\'s over there?','Mapping the world!','Adventure calls!','Onward!','I\'ve seen amazing things!','The horizon is my home!','Every corner holds a secret!','No map needed!','The unknown excites me!'],
+  griefer:['hehehe','Destroy everything!','CHAOS!','Burn it down!','Anarchy!!!','Nothing lasts!','Your work means nothing!','Watch it crumble!','I live for destruction!','Everything burns eventually!'],
+  cop:['Stop right there!','Justice served.','You are under arrest!','Order must be kept.','No crimes today!','The law is the law!','Crime doesn\'t pay!','Move along citizen.','Suspect spotted!','Drop what you\'re doing!'],
+  doctor:['Medicine helps!','Hold still...','Take your medicine.','I can fix that!','Vital signs stable.','Stay healthy!','Rest is the cure.','I\'ll patch you up!','Don\'t worry, I\'m a doctor!','Healing takes time.'],
+  teacher:['Class is in session!','Pay attention!','Learning is power!','Study hard!','Pop quiz!','Education changes lives!','Knowledge is the greatest gift!','Who can answer this?','Quiet please!','Today we learn history!'],
+  zookeeper:['Good boy!','Easy now...','Feed time!','Stay in your pen!','Such a good animal!','Come here little one!','Don\'t bite me!','Time for your checkup!','Who\'s a good creature?','Animals are the best!'],
+  author:['What a story this is...','Writing the chronicles!','Chapter one...','The plot thickens!','This world inspires me!','Words paint what eyes see!','Every life is a story!','I must document this!','History in the making!','My quill never rests!'],
+  librarian:['Welcome to the library!','Shh, please!','Have you read this?','Books hold all wisdom!','The stories live here!','Knowledge preserved forever!','Please return your books!','A new story arrived!','Come browse our collection!','Reading changes everything!'],
+  scared:['MONSTER!','Run away!!!','Help me!','IT\'S COMING!','AAAAAA!!!','Save me!','I don\'t want to die!','Please not me!','Someone help!','Get it away from me!'],
+  hungry:['I\'m starving...','Need food...','So hungry...','Where is food?','My stomach growls...','Can anyone spare food?','I haven\'t eaten all day!','Please, just a little food...'],
+  admin:['ORDER!','By decree...','All shall obey!','Admin on duty.','Maintain the peace!','I am the law here!'],
+  atschool:['Learning today!','Math is hard!','Recess soon!','Teacher is strict!','I love science!','This homework is impossible...'],
+  atarcade:['High score!','One more game!','I\'m on a streak!','Gaming!!','This game is amazing!','I\'ll beat the top score today!'],
+  shopping:['What a deal!','Buying supplies!','Price check!','Nice shop!','Everything I need!','Worth every coin!'],
+  injail:['Let me out!','I don\'t belong here!','This is unjust!','I\'ll be good!','Free me owner!','These walls close in...','I repent!'],
+  atlibrary:['Shh, reading...','This story is amazing!','So many books!','I love the library!','Learning from the past!'],
+  teamcheer:['For the team!','Together!','United we stand!','Team forever!','Nobody beats our crew!','We are unstoppable!']
+}
+function getPhrase(ai){
+  if(ai.inPrison) return pick(PH.injail)
+  if(monster&&dist(ai,monster)<180) return pick(PH.scared)
+  if(ai.food<20) return pick(PH.hungry)
+  if(admins.has(ai.name)) return pick(PH.admin)
+  if(ai.atSchool) return pick(PH.atschool)
+  if(ai.atArcade) return pick(PH.atarcade)
+  if(ai.shopping) return pick(PH.shopping)
+  if(ai.atLibrary) return pick(PH.atlibrary)
+  if(ai.team&&Math.random()<.25) return pick(PH.teamcheer)
+  return pick(PH[ai.personality]||PH.social)
+}
+
+// ════════════════════════════════════════════════
+// LIFE EVENTS + STORIES
+// ════════════════════════════════════════════════
+function logEvent(name,event){if(!lifeEvents[name])lifeEvents[name]=[];if(lifeEvents[name].length<30)lifeEvents[name].push({tick:tickCount,event})}
+
+const STORY_OPENERS=['Once upon a time,','Long ago in this very world,','Not long ago,','In the chronicles of this land,','History records that']
+const STORY_DEATHS=['and so their journey ended.','and thus the tale concludes.','until they breathed no more.','leaving only memory behind.']
+function writeStory(ai){
+  const subjects=Object.keys(lifeEvents).filter(n=>lifeEvents[n]?.length>=3)
+  if(!subjects.length)return
+  const subject=pick(subjects)
+  const events=lifeEvents[subject]
+  const subAI=AIs.find(a=>a.name===subject)
+  const pers=subAI?.personality||'traveler'
+  const age=subAI?Math.floor(subAI.age):'unknown'
+  const opener=pick(STORY_OPENERS)
+  const lines=[`📖 THE TALE OF ${subject}`,`by ${ai.name}`,``,`${opener} ${subject} came into this world as a ${pers}.`]
+  events.forEach(e=>lines.push(`[T${e.tick}] ${e.event.charAt(0).toUpperCase()+e.event.slice(1)}.`))
+  if(!subAI||subAI._dead){lines.push('');lines.push(pick(STORY_DEATHS))}
+  else{lines.push('');lines.push(`At age ${age}, ${subject} still walks among us. The story continues...`)}
+  const text=lines.join('\n')
+  const story={title:`The Tale of ${subject}`,text,author:ai.name,tick:tickCount,subject}
+  stories.push(story);if(stories.length>25)stories.shift()
+  playStory();log(`📚 ${ai.name} wrote: "${story.title}"!`,'cst')
+  updateStoriesUI()
+}
+function updateStoriesUI(){
+  const el=sel('storiesUI');if(!el)return
+  if(!stories.length){el.innerHTML='<div style="color:#00ffd020">No stories yet</div>';return}
+  el.innerHTML=stories.slice(-6).reverse().map(s=>`<div style="cursor:pointer;color:#cc88ff;margin:1px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="showStory(${s.tick})" title="${s.title}">${s.title.substring(0,24)}…</div>`).join('')
+  setText('stStories',stories.length)
+}
+function showStory(tick){
+  const s=stories.find(x=>x.tick==tick);if(!s)return
+  setText('storyTitle',`📖 ${s.title} (by ${s.author})`)
+  sel('storyText').textContent=s.text
+  sel('modalStory').classList.add('show')
+}
+function showLatestStory(){if(stories.length)showStory(stories[stories.length-1].tick)}
+
+// ════════════════════════════════════════════════
+// ANIMALS
+// ════════════════════════════════════════════════
+const ATYPES=[
+  {emoji:'🐇',name:'Rabbit',speed:2.0,hp:30,maxHp:30,size:5,fleeRange:90,tamable:true,foodVal:15},
+  {emoji:'🦊',name:'Fox',speed:1.5,hp:50,maxHp:50,size:7,fleeRange:55,tamable:true,foodVal:20,hunts:true},
+  {emoji:'🐻',name:'Bear',speed:1.1,hp:120,maxHp:120,size:12,fleeRange:15,tamable:false,foodVal:0,aggressive:true,damage:18},
+  {emoji:'🐦',name:'Bird',speed:2.5,hp:20,maxHp:20,size:4,fleeRange:110,tamable:true,foodVal:5},
+  {emoji:'🐢',name:'Turtle',speed:0.4,hp:80,maxHp:80,size:6,fleeRange:25,tamable:true,foodVal:10},
+  {emoji:'🦁',name:'Lion',speed:1.7,hp:150,maxHp:150,size:14,fleeRange:8,tamable:false,foodVal:0,aggressive:true,damage:28},
+  {emoji:'🐍',name:'Snake',speed:1.0,hp:40,maxHp:40,size:5,fleeRange:12,tamable:false,foodVal:0,aggressive:true,damage:9},
+  {emoji:'🐑',name:'Sheep',speed:1.2,hp:45,maxHp:45,size:6,fleeRange:70,tamable:true,foodVal:12,herds:true},
+  {emoji:'🦌',name:'Deer',speed:2.2,hp:55,maxHp:55,size:8,fleeRange:95,tamable:true,foodVal:18},
+  {emoji:'🐱',name:'Cat',speed:1.8,hp:35,maxHp:35,size:5,fleeRange:50,tamable:true,foodVal:8,hunts:true},
+  {emoji:'🐶',name:'Dog',speed:1.9,hp:60,maxHp:60,size:7,fleeRange:20,tamable:true,foodVal:0,loyal:true},
+  {emoji:'🦟',name:'Mosquito',speed:2.8,hp:8,maxHp:8,size:3,fleeRange:5,tamable:false,foodVal:0,aggressive:true,damage:3,swarms:true},
+  {emoji:'🐛',name:'Caterpillar',speed:0.3,hp:15,maxHp:15,size:4,fleeRange:20,tamable:true,foodVal:3},
+  {emoji:'🐞',name:'Ladybug',speed:1.0,hp:12,maxHp:12,size:3,fleeRange:30,tamable:true,foodVal:2},
+  {emoji:'🦋',name:'Butterfly',speed:1.5,hp:10,maxHp:10,size:4,fleeRange:60,tamable:true,foodVal:2},
+  {emoji:'🐌',name:'Snail',speed:0.2,hp:20,maxHp:20,size:4,fleeRange:10,tamable:true,foodVal:5},
+  {emoji:'🐝',name:'Bee',speed:2.0,hp:10,maxHp:10,size:3,fleeRange:15,tamable:false,foodVal:0,aggressive:true,damage:5,swarms:true}
+]
+function spawnAnimal(ti,x,y,tamed=false,ownerId=null){
+  const t=ATYPES[ti%ATYPES.length]
+  animals.push(Object.assign({},t,{x:x||rand(30,W-30),y:y||rand(30,H-60),vx:0,vy:0,tamed,ownerId,typeIdx:ti,inZoo:false,age:0,hp:t.maxHp,hunger:100,_discovered:false}))
+}
+function updateAnimal(a){
+  a.age+=0.01;a.hunger-=0.003;if(a.hp<=0||a.age>800){a._dead=true;return}
+  if(a.inZoo){
+    const zoo=institutions.zoo
+    if(zoo){if(a.hunger<20&&Math.random()<.0005){a.inZoo=false;log(`${a.emoji} ${a.name} escaped (hungry)!`,'czoo')}else if(Math.random()<.00007){a.inZoo=false;log(`${a.emoji} ${a.name} escaped!`,'czoo')}else{a.x=clamp(a.x+rand(-.5,.5),zoo.x+4,zoo.x+zoo.w-4);a.y=clamp(a.y+rand(-.5,.5),zoo.y+4,zoo.y+zoo.h-4);return}}
+  }
+  // hunger: seek food
+  if(a.hunger<60&&!a.tamed){let bf=null,bfd=9999;foods.forEach(f=>{const d=dist(a,f);if(d<90&&d<bfd){bfd=d;bf=f}});if(bf){a.vx+=(bf.x-a.x)/(bfd+1)*.5;a.vy+=(bf.y-a.y)/(bfd+1)*.5;if(bfd<8){a.hunger=Math.min(100,a.hunger+20);foods=foods.filter(f=>f!==bf)}}}
+  a.hunger=Math.max(0,a.hunger-.003)
+  // tamed: follow owner
+  if(a.tamed&&a.ownerId){const owner=AIs.find(ai=>ai.name===a.ownerId);if(owner){const d=dist(a,owner);if(d>45){a.vx+=(owner.x-a.x)/d*.7;a.vy+=(owner.y-a.y)/d*.7};if(a.loyal){const threat=AIs.find(ai=>ai.personality==='aggressive'&&!ai.isPlayer&&dist(ai,owner)<60);if(threat&&Math.random()<.01){threat.hp-=3;beep(400,.1,.06,'sawtooth')}}}else{a.tamed=false;a.ownerId=null}}
+  // swarms
+  if(a.swarms){const near=animals.filter(o=>o!==a&&o.typeIdx===a.typeIdx&&dist(a,o)<50);if(near.length){const cx=near.reduce((s,o)=>s+o.x,0)/near.length,cy=near.reduce((s,o)=>s+o.y,0)/near.length;a.vx+=(cx-a.x)*.05;a.vy+=(cy-a.y)*.05};const nai=AIs.find(ai=>dist(a,ai)<(a.fleeRange||10)+10);if(nai){a.vx+=(nai.x-a.x)*.08;a.vy+=(nai.y-a.y)*.08;if(dist(a,nai)<a.size+7)nai.hp-=(a.damage||2)*.02}}
+  // hunters
+  if(a.hunts&&!a.tamed){const prey=animals.find(o=>o!==a&&o.typeIdx!==a.typeIdx&&(o.size||4)<a.size&&dist(a,o)<60);if(prey){const d=dist(a,prey);a.vx+=(prey.x-a.x)/d*.6;a.vy+=(prey.y-a.y)/d*.6;if(d<a.size+5)prey.hp-=5}}
+  // herds
+  if(a.herds&&!a.tamed){const h=animals.filter(o=>o!==a&&o.typeIdx===a.typeIdx&&dist(a,o)<70);if(h.length){const cx=h.reduce((s,o)=>s+o.x,0)/h.length,cy=h.reduce((s,o)=>s+o.y,0)/h.length;a.vx+=(cx-a.x)*.04;a.vy+=(cy-a.y)*.04}}
+  // wild: flee or attack
+  if(!a.tamed&&!a.swarms&&!a.hunts){let nai=null,nd=9999;AIs.forEach(ai=>{const d=dist(a,ai);if(d<nd){nd=d;nai=ai}});if(nai&&nd<(a.fleeRange||50)){if(a.aggressive){a.vx+=(nai.x-a.x)/nd*.9;a.vy+=(nai.y-a.y)/nd*.9;if(nd<a.size+8){nai.hp-=(a.damage||5)*.05;beep(150,.08,.05,'sawtooth')}}else{a.vx-=(nai.x-a.x)/nd*.75;a.vy-=(nai.y-a.y)/nd*.75}}else if(!a.aggressive){a.vx=a.vx*.92+rand(-.25,.25);a.vy=a.vy*.92+rand(-.25,.25)}}
+  a.vx=clamp(a.vx,-a.speed*2,a.speed*2);a.vy=clamp(a.vy,-a.speed*2,a.speed*2)
+  // animals CAN enter water (unlike AIs)
+  a.x+=a.vx;a.y+=a.vy;a.x=clamp(a.x,5,W-5);a.y=clamp(a.y,5,H-5)
+}
+
+// ════════════════════════════════════════════════
+// TEAMS
+// ════════════════════════════════════════════════
+function createTeam(leader){
+  const id='t'+Date.now(),color=TEAM_COLORS[teamColorIdx%TEAM_COLORS.length],name=TNAME_A[teamColorIdx%TNAME_A.length]+' '+pick(TNAME_B)
+  teamColorIdx++
+  const t={id,name,color,leaderId:leader.name,members:new Set([leader.name]),baseIdx:null,stockpile:0,level:1}
+  teams.push(t);leader.team=id;playTeam();log(`🏴 "${name}" founded by ${leader.name}`,'ca');logEvent(leader.name,`founded team "${name}"`);return t
+}
+function getTeam(ai){return teams.find(t=>t.id===ai.team)||null}
+function disbandTeam(t){t.members.forEach(n=>{const ai=AIs.find(a=>a.name===n);if(ai)ai.team=null});teams=teams.filter(x=>x.id!==t.id)}
+function updateTeamsUI(){
+  const el=sel('teamsUI');if(!el)return
+  if(!teams.length){el.innerHTML='<div style="color:#00ffd020">No teams</div>';return}
+  el.innerHTML=teams.slice(0,8).map(t=>`<div style="display:flex;align-items:center;gap:3px;margin:2px 0"><span style="width:7px;height:7px;border-radius:50%;background:${t.color};display:inline-block;flex-shrink:0"></span><span style="color:${t.color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:88px">${t.name}</span><span style="margin-left:auto;color:#00ffd048;font-size:8px">${t.members.size}·L${t.level}</span></div>`).join('')
+}
+
+// ════════════════════════════════════════════════
+// WATER + INSTITUTIONS
+// ════════════════════════════════════════════════
+function generateWaters(){
+  waters=[]
+  if(worldBiome==='lava'){waters.push({x:0,y:rand(H*.3,H*.5),w:W,h:rand(18,28),type:'river',color:'#cc3300',alpha:.8});return}
+  if(worldBiome==='ocean'){waters.push({x:0,y:0,w:rand(W*.22,W*.30),h:H,type:'ocean',color:'#0a48a8',alpha:.9});waters.push({x:W*.68,y:0,w:W*.32,h:H,type:'ocean',color:'#0a48a8',alpha:.9});return}
+  waters.push({x:0,y:rand(H*.32,H*.56),w:W,h:rand(20,32),type:'river',color:BIOMES[worldBiome].wColor,alpha:BIOMES[worldBiome].wAlpha})
+  const nL=Math.floor(rand(1,3));for(let i=0;i<nL;i++){let lw=rand(55,100),lh=rand(38,72),x,y,tries=0;do{x=rand(20,W-lw-20);y=rand(20,H-lh-20);tries++}while(waters.some(w=>x<w.x+w.w+20&&x+lw>w.x-20&&y<w.y+w.h+20&&y+lh>w.y-20)&&tries<8);waters.push({x,y,w:lw,h:lh,type:'lake',color:BIOMES[worldBiome].wColor,alpha:BIOMES[worldBiome].wAlpha})}
+}
+function placeInst(emoji,wi,hi,mX=40,mY=30){
+  let x,y,tries=0
+  do{x=rand(mX,W-wi-mX);y=rand(mY,H-hi-mY);tries++}while((isInWater(x+wi/2,y+hi/2)||Object.values(institutions).some(b=>b&&x<b.x+b.w+12&&x+wi>b.x-12&&y<b.y+b.h+12&&y+hi>b.y-12))&&tries<40)
+  return{x,y,w:wi,h:hi,emoji}
+}
+function generateInstitutions(){
+  institutions={}
+  institutions.school  =placeInst('🏫',70,54)
+  institutions.prison  =placeInst('🏛',65,54)
+  institutions.shop    =placeInst('🛒',55,50)
+  institutions.arcade  =placeInst('🎮',54,50)
+  institutions.zoo     =placeInst('🐖',90,68)
+  institutions.hospital=placeInst('🏥',60,54)
+  institutions.library =placeInst('📚',75,58)
+  updateInstStats()
+}
+function updateInstStats(){
+  // guard every element with safe setText
+  setText('stSchool',institutions.school?'Open':'—')
+  setText('stPrison',institutions.prison?AIs.filter(a=>a.inPrison).length+' in':'—')
+  setText('stShop',institutions.shop?'Open':'—')
+  setText('stArcade',institutions.arcade?'Open':'—')
+  setText('stZoo',institutions.zoo?animals.filter(a=>a.inZoo).length+'':'—')
+  setText('stHosp',institutions.hospital?'Open':'—')
+  setText('stLibStat',institutions.library?stories.length+' stories':'—')
+}
+
+// ════════════════════════════════════════════════
+// MONSTERS
+// ════════════════════════════════════════════════
+function sMT(e,t,spd){const dx=t.x-e.x,dy=t.y-e.y,d=Math.sqrt(dx*dx+dy*dy);if(d<1)return;const nx=e.x+dx/d*spd*2,ny=e.y+dy/d*spd*2;if(isInWater(nx,ny)){e.vx+=rand(-1.5,1.5);e.vy+=rand(-1.5,1.5)}else{e.vx=e.vx*.6+(dx/d)*spd*.4;e.vy=e.vy*.6+(dy/d)*spd*.4}}
+const MTYPES=[
+  {name:'Giant Zombie',emoji:'🧟',speed:.44,hp:280,maxHp:280,sight:130,color:'#55aa55',size:18,weakness:'slow',ability:'one-tap kill',damage:999,
+   ai(m){let best=null;AIs.forEach(a=>{if(!best||a.hp<best.hp)best=a});if(best){m._lt={x:best.x,y:best.y};sMT(m,best,m.speed)}else if(m._lt){sMT(m,m._lt,m.speed);if(dist(m,m._lt)<10)m._lt=null}else{m.vx+=rand(-.2,.2);m.vy+=rand(-.2,.2)};AIs.forEach(a=>{if(dist(m,a)<m.size+7){killAI(a,'🧟 one-tapped');beep(70,.5,.12,'sawtooth')}})}},
+  {name:'Vampire Bat',emoji:'🦇',speed:2.4,hp:90,maxHp:90,sight:9999,color:'#8855ff',size:12,weakness:'bright light',ability:'area scream',damage:20,
+   ai(m){m.sCD=(m.sCD||0)-1;if(m.sCD<=0){AIs.filter(a=>dist(m,a)<220).forEach(a=>{a.hp-=18;a.vx+=rand(-3,3);a.vy+=rand(-3,3)});log('🦇 Bat SCREAMS!','cm');beep(1800,.4,.1,'sawtooth');m.sCD=260};let best=null;AIs.forEach(a=>{if(!best||a.hp<best.hp)best=a});if(best){sMT(m,best,m.speed);if(dist(m,best)<m.size+7)best.hp-=m.damage*.06}}},
+  {name:'Night Owl',emoji:'🦉',speed:3.8,hp:70,maxHp:70,sight:90,color:'#ccaa33',size:13,weakness:'flashlights',ability:'super fast',damage:30,
+   ai(m){let nFL=null,fd=9999;flashlights.forEach(f=>{const d=dist(m,f);if(d<fd){fd=d;nFL=f}});if(nFL&&fd<160){m.vx+=(m.x-nFL.x)/fd*2.5;m.vy+=(m.y-nFL.y)/fd*2.5;return};let best=null,bd=9999;AIs.forEach(a=>{if(a.hasFlashlight)return;const d=dist(m,a);if(d<m.sight&&d<bd){bd=d;best=a}});if(best){sMT(m,best,m.speed);if(bd<m.size+7){best.hp-=m.damage*.08;beep(220,.08,.05)}}else{m.vx+=rand(-.5,.5);m.vy+=rand(-.5,.5)}}},
+  {name:'Kangaroo',emoji:'🦘',speed:.9,hp:150,maxHp:150,sight:160,color:'#cc8833',size:15,weakness:'slow between dashes',ability:'lethal dash',damage:50,
+   ai(m){m.dC=(m.dC||0)-1;if(m.dash){m.dT--;if(m.dTgt)sMT(m,m.dTgt,7);AIs.forEach(a=>{if(dist(m,a)<m.size+8){a.hp-=m.damage;a.vx+=rand(-6,6);a.vy-=9;log(`🦘 Roo smashed ${a.name}!`,'cm');beep(140,.3,.1,'square')}});if(m.dT<=0)m.dash=false;return};if(m.dC<=0){let best=null,bd=9999;AIs.forEach(a=>{const d=dist(m,a);if(d<m.sight&&d<bd){bd=d;best=a}});if(best){m.dash=true;m.dTgt=best;m.dT=28;m.dC=180;log('🦘 Roo charging!','cm')}}else{let best=null,bd=9999;AIs.forEach(a=>{const d=dist(m,a);if(d<m.sight&&d<bd){bd=d;best=a}});if(best)sMT(m,best,m.speed);else{m.vx+=rand(-.4,.4);m.vy+=rand(-.4,.4)}}}},
+  {name:'Killbot-9000',emoji:'🤖',speed:2.9,hp:350,maxHp:350,sight:220,color:'#4488ff',size:17,weakness:'has HP bar (destroyable)',ability:'$1M sword (rare)',damage:30,
+   ai(m){m.sC=(m.sC||0)-1;m.sChance=Math.min(.6,(m.sChance||.02)+.00012);let best=null,bd=9999;AIs.forEach(a=>{const d=dist(m,a),p=(admins.has(a.name)?.5:1)*d;if(d<m.sight&&p<bd){bd=p;best=a}});if(best){sMT(m,best,m.speed);if(dist(m,best)<m.size+9){if(m.sC<=0&&Math.random()<m.sChance){AIs.forEach(a=>{if(dist(m,a)<70){killAI(a,'🤖 $1M SWORD');beep(45,1.2,.15,'sawtooth')}});log('🤖 $1M SWORD!!','cm');m.sC=320}else{best.hp-=m.damage*.06;beep(180,.08,.05,'square')}}}else{m.vx+=rand(-1,1);m.vy+=rand(-1,1)}}},
+  {name:'Shadow Kraken',emoji:'🐙',speed:1.1,hp:200,maxHp:200,sight:180,color:'#440066',size:20,weakness:'flashlights',ability:'teleport + tentacles',damage:25,
+   ai(m){m.tC=(m.tC||0)-1;m.telC=(m.telC||0)-1;if(m.tC<=0){AIs.slice(0,3).forEach(a=>{if(dist(m,a)<m.sight)(m.tentacles=m.tentacles||[]).push({x:a.x+rand(-25,25),y:a.y+rand(-25,25),timer:80})});m.tC=120};m.tentacles=(m.tentacles||[]).filter(t=>t.timer-->0);m.tentacles.forEach(t=>{AIs.forEach(a=>{if(dist(t,a)<18){a.hp-=.4;a.hunger-=.3}})});if(m.telC<=0&&AIs.length){let cx=0,cy=0;AIs.forEach(a=>{cx+=a.x;cy+=a.y});cx/=AIs.length;cy/=AIs.length;m.x=clamp(cx+rand(-40,40),20,W-20);m.y=clamp(cy+rand(-40,40),20,H-20);m.telC=300;beep(200,.3,.08,'triangle');log('🐙 Kraken teleports!','cm')};AIs.forEach(a=>{if(dist(m,a)<m.size+8){a.hp-=m.damage*.05;a.food-=.5}});if(AIs.length){let cx=0,cy=0,n=0;AIs.forEach(a=>{if(dist(m,a)<m.sight){cx+=a.x;cy+=a.y;n++}});if(n>0)sMT(m,{x:cx/n,y:cy/n},m.speed)}}},
+  {name:'Ice Witch',emoji:'🧊',speed:1.3,hp:180,maxHp:180,sight:160,color:'#88ddff',size:16,weakness:'lava biome weakens her',ability:'freeze AIs + ice storm',damage:15,
+   ai(m){m.fzC=(m.fzC||0)-1;m.strmC=(m.strmC||0)-1;if(m.fzC<=0){AIs.filter(a=>dist(m,a)<100).forEach(a=>{frozenAIs.add(a.name);setTimeout(()=>frozenAIs.delete(a.name),3000)});beep(800,.4,.08,'triangle');m.fzC=200};if(m.strmC<=0){AIs.forEach(a=>{a.hp-=10;a.hunger-=5});log('🧊 Ice Storm!','cm');beep(600,.6,.1,'triangle');m.strmC=400};let best=null,bd=9999;AIs.forEach(a=>{const d=dist(m,a);if(d<m.sight&&d<bd){bd=d;best=a}});if(best)sMT(m,best,m.speed);else{m.vx+=rand(-.3,.3);m.vy+=rand(-.3,.3)};if(worldBiome==='lava')m.hp-=.06}}
+]
+function spawnMonster(){
+  if(playerDiff==='easy')return
+  const t=MTYPES[Math.floor(rand(0,MTYPES.length))]
+  monster=Object.assign({},t,{x:rand(20,W-20),y:rand(20,H-20),vx:0,vy:0,hp:t.maxHp,tentacles:[],sCD:120,dC:0,dash:false,sC:0,sChance:.02,tC:0,telC:100,fzC:120,strmC:300})
+  nightMonsterSpawned=true;playMonster()
+  log(`🌑 Night ${dayNum}: ${monster.emoji} ${monster.name}!`,'cm')
+  const mp=sel('monsterPanel');if(mp)mp.style.display='block'
+  setText('monsterName',`${monster.emoji} ${monster.name}`)
+  setText('monsterDesc',`Weakness: ${monster.weakness}\nAbility: ${monster.ability}`)
+  const needHP=['Killbot-9000','Shadow Kraken','Ice Witch']
+  const hw=sel('monHPWrap');if(hw)hw.style.display=needHP.includes(monster.name)?'block':'none'
+  const ma=sel('monsterAlert');if(ma)ma.style.display='inline'
+}
+function killAI(ai,cause){ai._dead=true;ai._deathCause=cause}
+function updateMonster(){
+  if(!monster)return
+  monster.ai(monster)
+  monster.vx=clamp(monster.vx,-monster.speed*3,monster.speed*3);monster.vy=clamp(monster.vy,-monster.speed*3,monster.speed*3)
+  if(isInWater(monster.x+monster.vx,monster.y+monster.vy)){monster.vx*=-.6;monster.vy*=-.6}else{monster.x+=monster.vx;monster.y+=monster.vy}
+  monster.x=clamp(monster.x,20,W-20);monster.y=clamp(monster.y,20,H-20)
+  const nhpb=sel('monHPBar')
+  if(nhpb&&['Killbot-9000','Shadow Kraken','Ice Witch'].includes(monster.name))nhpb.style.width=(monster.hp/monster.maxHp*100)+'%'
+  if(monster.hp<=0){log(`${monster.emoji} ${monster.name} destroyed!`,'ca');monster=null;const mp=sel('monsterPanel');if(mp)mp.style.display='none';const ma=sel('monsterAlert');if(ma)ma.style.display='none'}
+}
+
+// ════════════════════════════════════════════════
+// MAKE AI
+// ════════════════════════════════════════════════
+const ALL_PERS=['aggressive','builder','social','explorer','griefer','cop','doctor','teacher','zookeeper','author','librarian']
+const PERS_W   =[.16,.16,.16,.08,.10,.07,.06,.05,.05,.06,.05]
+function makeAI(ov={}){
+  const p=ov.personality||wPick(ALL_PERS,PERS_W)
+  return Object.assign({
+    name:nameGen(),x:rand(30,W-30),y:rand(30,H-80),
+    hp:100,food:55,hunger:100,age:0,vision:rand(80,130),speed:rand(1.2,2.0),
+    personality:p,size:4,children:0,kills:0,vx:0,vy:0,speech:null,speechTimer:0,
+    hasFlashlight:false,flashlightTimer:0,team:null,frozen:false,money:rand(5,20),
+    atSchool:false,atArcade:false,shopping:false,inPrison:false,atLibrary:false,
+    prisonTimer:0,shopCooldown:0,griefProgress:0,writeCooldown:0,isPlayer:false,memory:{}
+  },ov)
+}
+function wPick(arr,w){let r=Math.random(),s=0;for(let i=0;i<arr.length;i++){s+=w[i];if(r<s)return arr[i]}return arr[0]}
+function spawnAI(ov={}){const ai=makeAI(ov);if(banned.has(ai.name))return null;AIs.push(ai);playBorn();log(`Born: ${ai.name} (${ai.personality})`,'cb');logEvent(ai.name,`was born, a ${ai.personality}`);return ai}
+function spawnMany(){for(let i=0;i<8;i++)spawnAI()}
+function spawnFood(n=5){const cfg=BIOMES[worldBiome];for(let i=0;i<n;i++){let x,y,t=0;do{x=rand(15,W-15);y=rand(15,H-15);t++}while(isInWater(x,y)&&t<15);foods.push({x,y,value:rand(18,34),color:cfg.foodColor})}}
+
+// ════════════════════════════════════════════════
+// AI UPDATE
+// ════════════════════════════════════════════════
+function updateAI(ai,dead){
+  if(frozenAIs.has(ai.name)||ai.isPlayer)return
+  ai.age+=0.02;ai.food-=0.009+ai.size*.0007;ai.hunger-=0.006
+  if(ai.food<=0){ai.hp-=0.08;ai.food=0}
+  if(ai.hunger<=0){ai.hp-=0.04;ai.hunger=0}
+  if(ai.hp<=0||ai.age>560||(ai._dead&&!ai._loggedDeath)){dead.add(ai);return}
+  if(ai.shopCooldown>0)ai.shopCooldown--;if(ai.writeCooldown>0)ai.writeCooldown--
+  ai.size=ai.age<30?3:ai.age<180?5:4;if(admins.has(ai.name))ai.size+=2
+  if(ai.speechTimer>0)ai.speechTimer--;else ai.speech=null
+  if(Math.random()<.0003){ai.speech=getPhrase(ai);ai.speechTimer=140}
+  const night=isNight(),myTeam=getTeam(ai)
+  const isUnder13=(ai.age<13),isUnder18=(ai.age<18)
+  let tx=null,ty=null
+
+  // prison
+  if(ai.inPrison){ai.prisonTimer--;const p=institutions.prison;if(p){tx=p.x+p.w/2+rand(-14,14);ty=p.y+p.h/2+rand(-14,14)};if(ai.prisonTimer<=0){ai.inPrison=false;ai.prisonTimer=0;log(`${ai.name} released`,'czk')};moveAI(ai,tx,ty,false);return}
+  // school
+  if(isUnder13&&institutions.school&&dayPhase>SCHOOL_IN&&dayPhase<SCHOOL_OUT&&!night){ai.atSchool=true;const s=institutions.school;tx=s.x+s.w/2+rand(-18,18);ty=s.y+s.h/2+rand(-18,18);if(Math.random()<.002){ai.speech=pick(PH.atschool);ai.speechTimer=120};moveAI(ai,tx,ty,false);return}else ai.atSchool=false
+  // arcade
+  if(isUnder18&&!isUnder13&&institutions.arcade&&dayPhase>ARCADE_IN&&dayPhase<ARCADE_OUT&&!night){if(Math.random()<.007&&!ai.atArcade)ai.atArcade=true;if(ai.atArcade){const a=institutions.arcade;tx=a.x+a.w/2+rand(-13,13);ty=a.y+a.h/2+rand(-13,13);if(Math.random()<.003){ai.speech=pick(PH.atarcade);ai.speechTimer=120};moveAI(ai,tx,ty,false);return}}else ai.atArcade=false
+  // library (under 18 reads)
+  if(isUnder18&&institutions.library&&dayPhase>LIB_IN&&dayPhase<LIB_OUT&&!night&&stories.length>0){if(Math.random()<.003&&!ai.atLibrary)ai.atLibrary=true;if(ai.atLibrary){const lib=institutions.library;tx=lib.x+lib.w/2+rand(-15,15);ty=lib.y+lib.h/2+rand(-15,15);if(Math.random()<.002){ai.speech=pick(PH.atlibrary);ai.speechTimer=120};moveAI(ai,tx,ty,false);return}}else ai.atLibrary=false
+  // shop
+  if(institutions.shop&&ai.money>5&&ai.shopCooldown<=0&&dayPhase>SHOP_OPEN&&dayPhase<SHOP_CLOSE&&!night&&Math.random()<.0002){ai.shopping=true;const s=institutions.shop;tx=s.x+s.w/2;ty=s.y+s.h/2;if(nearInst(institutions.shop,ai.x,ai.y,14)){ai.food=Math.min(100,ai.food+25);ai.hunger=Math.min(100,ai.hunger+20);ai.hp=Math.min(100,ai.hp+10);ai.money-=5;playCash();ai.speech='Got supplies!';ai.speechTimer=90;ai.shopping=false;ai.shopCooldown=900;log(`${ai.name} shopped 💰-5`,'czk')};moveAI(ai,tx,ty,false);return}else ai.shopping=false
+  // hospital
+  if(ai.hp<30&&institutions.hospital&&Math.random()<.003){const h=institutions.hospital;tx=h.x+h.w/2;ty=h.y+h.h/2;if(nearInst(h,ai.x,ai.y,14)&&ai.money>=3){ai.hp=Math.min(100,ai.hp+30);ai.money-=3;playCash();ai.speech='Better now! 💊';ai.speechTimer=90;log(`${ai.name} used hospital`,'czk')};moveAI(ai,tx,ty,false);return}
+  // weather
+  if(weatherType==='storm'){ai.vx+=rand(-.3,.3);ai.vy+=rand(-.2,.2)}
+  // drink
+  if(ai.hunger<60){const nW=waters.find(w=>Math.abs(ai.x-(w.x+w.w/2))<w.w/2+25&&Math.abs(ai.y-(w.y+w.h/2))<w.h/2+25);if(nW){const wx=clamp(ai.x,nW.x+3,nW.x+nW.w-3),wy=clamp(ai.y,nW.y+3,nW.y+nW.h-3);if(dist(ai,{x:wx,y:wy})<20)ai.hunger=Math.min(100,ai.hunger+.7);else if(!tx){tx=wx+rand(-4,4);ty=wy+rand(-4,4)}}}
+  // night: flee monster
+  if(night&&monster){const md=dist(ai,monster);if(md<monster.sight+60){tx=ai.x-(monster.x-ai.x)*3;ty=ai.y-(monster.y-ai.y)*3;if(ai.speechTimer<=0&&Math.random()<.06){ai.speech=pick(PH.scared);ai.speechTimer=55}};if(monster.name==='Night Owl'&&!ai.hasFlashlight&&Math.random()<.004){ai.hasFlashlight=true;ai.flashlightTimer=Math.floor(DAY_LEN*.6);flashlights.push({x:ai.x,y:ai.y,owner:ai.name,timer:ai.flashlightTimer});log(`${ai.name} grabs flashlight 🔦`,'ce')};if(monster.name==='Shadow Kraken'){(monster.tentacles||[]).forEach(t=>{if(dist(ai,t)<30){tx=ai.x-(t.x-ai.x)*2;ty=ai.y-(t.y-ai.y)*2}})}}
+  if(ai.hasFlashlight){ai.flashlightTimer--;const fl=flashlights.find(f=>f.owner===ai.name);if(fl){fl.x=ai.x;fl.y=ai.y;fl.timer=ai.flashlightTimer};if(ai.flashlightTimer<=0){ai.hasFlashlight=false;flashlights=flashlights.filter(f=>f.owner!==ai.name)}}
+  if(night&&!tx&&builds.length>0){const b=myTeam?.baseIdx!=null?builds[myTeam.baseIdx]:builds.reduce((a,b2)=>dist(ai,b2)<dist(ai,a)?b2:a,builds[0]);if(b&&dist(ai,b)>22){tx=b.x+rand(-12,12);ty=b.y+rand(-12,12)}}
+  // food
+  if(!tx&&ai.food<72){let bf=null,bfd=9999;foods.forEach(f=>{const d=dist(ai,f);if(d<bfd){bfd=d;bf=f}});if(bf&&bfd<ai.vision){tx=bf.x;ty=bf.y;if(dist(ai,bf)<7){const amt=bf.value;ai.food=Math.min(100,ai.food+amt);ai.hunger=Math.min(100,ai.hunger+amt*.65);ai.money+=Math.floor(amt*.1);if(myTeam)myTeam.stockpile+=amt*.3;foods=foods.filter(f=>f!==bf);beep(500+rand(-30,30),.09,.04)}}}
+  // AGGRESSIVE
+  if(ai.personality==='aggressive'&&ai.age>=5&&!night){let be=null,bed=9999;AIs.forEach(o=>{if(o===ai||admins.has(o.name)||o.isPlayer)return;if(myTeam&&o.team===myTeam.id)return;if(o.name===ai._lastChild||o.age<5)return;const d=dist(ai,o);if(d<ai.vision&&d<bed){bed=d;be=o}});if(be){tx=be.x;ty=be.y;if(bed<10){be.hp-=1.8;beep(110+rand(-15,15),.07,.05,'sawtooth');if(be.hp<=0){ai.kills++;ai.food=Math.min(100,ai.food+25);dead.add(be);be._deathCause=`${ai.name} killed`;log(`${ai.name} killed ${be.name}`,'ck');logEvent(ai.name,`killed ${be.name}`);logEvent(be.name,`was killed by ${ai.name}`);playDie()}}};if(myTeam?.baseIdx!=null&&builds[myTeam.baseIdx]&&!tx){const b=builds[myTeam.baseIdx];if(dist(ai,b)>80){tx=b.x+rand(-40,40);ty=b.y+rand(-40,40)}}}
+  // BUILDER
+  if(ai.personality==='builder'){if(!night){let ng=null,ngd=9999;AIs.forEach(o=>{if(o.personality==='griefer'){const d=dist(ai,o);if(d<ai.vision&&d<ngd){ngd=d;ng=o}}});if(ng){tx=ng.x;ty=ng.y;if(ngd<10){ng.hp-=1.2;beep(330,.08,.04,'square');if(ng.hp<=0){dead.add(ng);ng._deathCause=`${ai.name}(builder)`;log(`🔵 Builder ${ai.name} defeated griefer ${ng.name}!`,'cbu');ai.kills++}}}};if(!tx&&ai.food>50&&builds.length<70&&Math.random()<.0012){let bx=ai.x+rand(-8,8),by=ai.y+rand(-8,8);if(!isInWater(bx,by)){const nb={x:bx,y:by,owner:ai.name,team:ai.team,hp:100,maxHp:100,level:1};builds.push(nb);ai.food-=10;playBuild();log(`${ai.name} built 🔵`,'cbu');logEvent(ai.name,'built a structure');if(myTeam&&myTeam.baseIdx===null){myTeam.baseIdx=builds.length-1;log(`🏰 ${myTeam.name} claims base`,'ca')}}};if(myTeam?.baseIdx!=null&&builds[myTeam.baseIdx]){const b=builds[myTeam.baseIdx];if(dist(ai,b)<30&&ai.food>45&&myTeam.stockpile>50&&b.level<MAX_BLD_LV&&Math.random()<.0007){b.level++;myTeam.level=b.level;myTeam.stockpile-=50;ai.food-=15;log(`🏰 ${myTeam.name} Lv${b.level}!`,'ca');beep(880,.2,.07);beep(1100,.2,.05)}}}
+  // SOCIAL: tame animals + invite
+  if(ai.personality==='social'){if(!ai.team&&ai.age>30&&Math.random()<.0004)createTeam(ai);if(myTeam&&Math.random()<.0008){AIs.forEach(o=>{if(o===ai||o.team||o.isPlayer)return;if(dist(ai,o)<60){o.team=myTeam.id;myTeam.members.add(o.name);log(`${ai.name} invited ${o.name}`,'ca');logEvent(o.name,`joined team "${myTeam.name}"`)}});if(playMode&&playerAI&&!playerAI.team&&!pendingInvite&&myTeam&&dist(ai,playerAI)<80&&Math.random()<.01){pendingInvite={team:myTeam,inviterName:ai.name};setText('inviteText',`${ai.name} invites you to join "${myTeam.name}"!`);sel('modalInvite').classList.add('show')}};let tameable=animals.find(a=>!a.tamed&&a.tamable&&!a.inZoo&&dist(ai,a)<60);if(tameable&&Math.random()<.002){tameable.tamed=true;tameable.ownerId=ai.name;log(`🟢 ${ai.name} tamed ${tameable.emoji}!`,'czoo');ai.speech=`Tamed ${tameable.emoji}!`;ai.speechTimer=150;beep(700,.15,.06);logEvent(ai.name,`tamed a ${tameable.name}`)};if(myTeam){let cx=0,cy=0,n=0;AIs.forEach(o=>{if(o.team===myTeam.id&&o!==ai){cx+=o.x;cy+=o.y;n++}});if(n>0&&!tx){tx=cx/n+rand(-12,12);ty=cy/n+rand(-12,12)}}else{let cx=0,cy=0,n=0;AIs.forEach(o=>{if(o!==ai&&dist(ai,o)<ai.vision*.7){cx+=o.x;cy+=o.y;n++}});if(n>0&&!tx){tx=cx/n+rand(-8,8);ty=cy/n+rand(-8,8)}}}
+  // EXPLORER
+  if(ai.personality==='explorer'){if(!ai._explTgt||dist(ai,ai._explTgt)<20||Math.random()<.003)ai._explTgt={x:rand(20,W-20),y:rand(20,H-20)};if(!tx){tx=ai._explTgt.x;ty=ai._explTgt.y};animals.forEach(a=>{if(!a.tamed&&dist(ai,a)<40&&!a._discovered&&Math.random()<.05){a._discovered=true;log(`🟣 ${ai.name} found ${a.emoji}!`,'czoo');logEvent(ai.name,`discovered a ${a.name}`)}});if(Math.random()<.0005)ai.money+=2}
+  // GRIEFER
+  if(ai.personality==='griefer'){let target=null,td=9999;builds.forEach((b,i)=>{if(myTeam&&b.team===myTeam.id)return;const d=dist(ai,b);if(d<ai.vision&&d<td){td=d;target={b,i}}});if(target){tx=target.b.x;ty=target.b.y;if(td<14){ai.griefProgress=(ai.griefProgress||0)+1;const needed=40+target.b.level*35;if(ai.griefProgress>=needed){ai.griefProgress=0;target.b.hp-=35;playGrief();if(target.b.hp<=0){const ownr=target.b.owner||'?';teams.forEach(t=>{if(t.baseIdx===target.i)t.baseIdx=null});builds.splice(target.i,1);teams.forEach(t=>{if(t.baseIdx!=null&&t.baseIdx>target.i)t.baseIdx--});log(`💀 ${ai.name} griefed ${ownr}'s build!`,'cgr');logEvent(ai.name,`destroyed ${ownr}'s structure`);ai.speech=pick(PH.griefer);ai.speechTimer=80}}else if(Math.random()<.01){ai.speech=`Destroying… ${Math.round(ai.griefProgress/needed*100)}%`;ai.speechTimer=50}}else ai.griefProgress=0}else{ai.griefProgress=0;let bf=null,bfd=9999;foods.forEach(f=>{const d=dist(ai,f);if(d<bfd){bfd=d;bf=f}});if(bf&&bfd<ai.vision+20){tx=bf.x;ty=bf.y;if(bfd<7){ai.food=Math.min(100,ai.food+bf.value*1.3);ai.hunger=Math.min(100,ai.hunger+20);foods=foods.filter(f=>f!==bf)}}}}
+  // COP
+  if(ai.personality==='cop'&&!night){let suspect=null,sd=9999;AIs.forEach(o=>{if(o===ai||o.inPrison||o.isPlayer)return;if(o.personality!=='aggressive'&&o.personality!=='griefer')return;const d=dist(ai,o);if(d<ai.vision&&d<sd){sd=d;suspect=o}});if(suspect){tx=suspect.x;ty=suspect.y;if(sd<12){suspect.inPrison=true;suspect.prisonTimer=Math.floor(rand(600,1500));const p=institutions.prison;if(p){suspect.x=p.x+p.w/2+rand(-10,10);suspect.y=p.y+p.h/2+rand(-10,10)};playArrest();log(`👮 ${ai.name} arrested ${suspect.name}!`,'czk');ai.speech='You\'re under arrest!';ai.speechTimer=120;logEvent(suspect.name,`was arrested by ${ai.name}`);ai.kills++}}else{const p=institutions.prison;if(p&&dist(ai,{x:p.x+p.w/2,y:p.y+p.h/2})>100){tx=p.x+p.w/2+rand(-40,40);ty=p.y+p.h/2+rand(-40,40)}else{ai.vx=ai.vx*.9+rand(-.4,.4);ai.vy=ai.vy*.9+rand(-.4,.4)}}}
+  // DOCTOR: stay near hospital, heal nearby AIs
+  if(ai.personality==='doctor'){const h=institutions.hospital;if(h){tx=h.x+h.w/2+rand(-20,20);ty=h.y+h.h/2+rand(-20,20)};AIs.filter(o=>o!==ai&&dist(ai,o)<35&&o.hp<70&&Math.random()<.05).forEach(o=>{o.hp=Math.min(100,o.hp+5);playHeal();if(Math.random()<.1)log(`🏥 Dr.${ai.name} healed ${o.name}`,'cd')});if(Math.random()<.001){ai.speech=pick(PH.doctor);ai.speechTimer=130}}
+  // TEACHER
+  if(ai.personality==='teacher'){const inHrs=dayPhase>SCHOOL_IN&&dayPhase<SCHOOL_OUT&&!night;if(inHrs&&institutions.school){const s=institutions.school;tx=s.x+s.w/2+rand(-14,14);ty=s.y+s.h/2+rand(-14,14);if(Math.random()<.001){ai.speech=pick(PH.teacher);ai.speechTimer=130}}else if(!tx){ai.vx=ai.vx*.9+rand(-.4,.4);ai.vy=ai.vy*.9+rand(-.4,.4)}}
+  // ZOOKEEPER
+  if(ai.personality==='zookeeper'){const zoo=institutions.zoo;let esc=animals.find(a=>!a.inZoo&&a._discovered&&dist(ai,a)<ai.vision&&!a.aggressive);if(esc&&!esc.tamed){tx=esc.x;ty=esc.y;if(dist(ai,esc)<15){esc.inZoo=true;if(zoo){esc.x=zoo.x+rand(10,zoo.w-10);esc.y=zoo.y+rand(10,zoo.h-10)};log(`🐾 ${ai.name} returned ${esc.emoji}`,'czoo');ai.speech=`Got you! 🐾`;ai.speechTimer=90}}else if(!tx){animals.filter(a=>a.hp<a.maxHp*.5&&dist(ai,a)<50).forEach(a=>{a.hp=Math.min(a.maxHp,a.hp+.2);ai.food-=.01});if(zoo){tx=zoo.x+zoo.w/2+rand(-28,28);ty=zoo.y+zoo.h/2+rand(-28,28)}}}
+  // AUTHOR
+  if(ai.personality==='author'){const lib=institutions.library;if(lib){tx=lib.x+lib.w/2+rand(-12,12);ty=lib.y+lib.h/2+rand(-12,12)};if(ai.writeCooldown<=0&&Math.random()<.0005&&Object.keys(lifeEvents).filter(n=>lifeEvents[n]?.length>=3).length>0){writeStory(ai);ai.writeCooldown=Math.floor(rand(800,2000))};if(Math.random()<.001){ai.speech=pick(PH.author);ai.speechTimer=130}}
+  // LIBRARIAN
+  if(ai.personality==='librarian'){const lib=institutions.library;if(lib){tx=lib.x+lib.w/2+rand(-10,10);ty=lib.y+lib.h/2+rand(-10,10)};if(Math.random()<.001){ai.speech=pick(PH.librarian);ai.speechTimer=130};if(stories.length>0&&lib){AIs.forEach(o=>{if(o===ai||o.atLibrary||!nearInst(lib,o.x,o.y,20))return;if(Math.random()<.002){o.atLibrary=true;log(`📚 ${ai.name} welcomed ${o.name}`,'cst')}})}}
+  // ADMIN policing
+  if(admins.has(ai.name)&&!night){let tgt=null,td=9999;AIs.forEach(o=>{if(o===ai||admins.has(o.name)||o.inPrison||o.isPlayer)return;if(o.personality!=='aggressive'&&o.personality!=='griefer')return;const d=dist(ai,o);if(d<ai.vision&&d<td){td=d;tgt=o}});if(tgt){tx=tgt.x;ty=tgt.y;if(td<12){tgt.hp-=2.5;beep(440,.08,.04,'square');if(tgt.hp<=0){dead.add(tgt);tgt._deathCause=`${ai.name}(Admin)`;log(`Admin ${ai.name} subdued ${tgt.name}`,'ca');ai.kills++}}}}
+  // REPRODUCE: must be near hospital
+  if(ai.age>70&&ai.food>72&&AIs.length<MAX_AI&&Math.random()<.0005){
+    const h=institutions.hospital
+    if(!h||nearInst(h,ai.x,ai.y,30)){
+      const child=makeAI({name:nameGen(),x:ai.x+rand(-15,15),y:ai.y+rand(-15,15),personality:Math.random()<.78?ai.personality:wPick(ALL_PERS,PERS_W),food:35,hp:80,age:0,team:ai.team,money:5})
+      ai._lastChild=child.name;if(ai.team&&getTeam(ai))getTeam(ai).members.add(child.name)
+      AIs.push(child);ai.food-=32;ai.children++;generation=Math.max(generation,Math.floor(ai.age/60)+1)
+      playBorn();log(`${ai.name} had ${child.name} 🏥`,'cb');logEvent(ai.name,`gave birth to ${child.name}`);logEvent(child.name,`was born to ${ai.name}`)
+    }
+  }
+  moveAI(ai,tx,ty,false)
+}
+
+function moveAI(ai,tx,ty,isPlayer=false){
+  if(tx!=null&&ty!=null){const dx=tx-ai.x,dy=ty-ai.y,d=Math.sqrt(dx*dx+dy*dy);if(d>.5){ai.vx=ai.vx*.62+(dx/d)*ai.speed*.38;ai.vy=ai.vy*.62+(dy/d)*ai.speed*.38}}
+  else{ai.vx=ai.vx*.9+rand(-.5,.5);ai.vy=ai.vy*.9+rand(-.5,.5)}
+  const nx=ai.x+ai.vx,ny=ai.y+ai.vy
+  // players pass through water freely; AIs bounce
+  if(!isPlayer&&isInWater(nx,ny)){ai.vx*=-.6;ai.vy*=-.6;ai.vx+=rand(-.5,.5);ai.vy+=rand(-.5,.5)}
+  else{ai.x+=ai.vx;ai.y+=ai.vy}
+  if(ai.x<ai.size){ai.x=ai.size;ai.vx*=-.5}
+  if(ai.x>W-ai.size){ai.x=W-ai.size;ai.vx*=-.5}
+  if(ai.y<ai.size){ai.y=ai.size;ai.vy*=-.5}
+  if(ai.y>H-ai.size){ai.y=H-ai.size;ai.vy*=-.5}
+}
+
+// ════════════════════════════════════════════════
+// GRIEFER GANGS
+// ════════════════════════════════════════════════
+function tryFormGrieferGang(){
+  const loners=AIs.filter(a=>a.personality==='griefer'&&!a.team)
+  loners.forEach(g=>{const nb=loners.filter(o=>o!==g&&dist(g,o)<80);if(nb.length>=2&&!g.team){const gang=createTeam(g);gang.name='Gang '+gang.name.split(' ')[1];nb.slice(0,4).forEach(o=>{o.team=gang.id;gang.members.add(o.name)});const el=sel('grpAlert');if(el){el.style.display='inline';el.textContent=`💀 ${gang.name} formed!`;setTimeout(()=>el.style.display='none',3000)};log(`💀 Griefer gang "${gang.name}" formed!`,'cgr')}})
+}
+
+// ════════════════════════════════════════════════
+// PLAY MODE
+// ════════════════════════════════════════════════
+function startPlay(){
+  let raw=(sel('pNameIn')?.value||'').toUpperCase().trim()
+  if(!/^[A-Z]\d{3}$/.test(raw))raw=nameGen()
+  playerRole=selectedRole
+  playerDiff=sel('pDiffIn')?.value||'normal'
+  const biome=sel('pBiomeIn')?.value||'forest'
+  const wid='play_'+Date.now()
+  const w={id:wid,name:`${raw}'s World`,biome,day:1,tick:0,population:0}
+  allWorlds.push(w);saveAllWorlds(allWorlds)
+  loadWorld(wid,true)
+  setTimeout(()=>{
+    playerAI=makeAI({name:raw,x:W/2,y:H/2,personality:playerRole,isPlayer:true,money:25,hp:100,food:80,hunger:100})
+    AIs.push(playerAI);playMode=true
+    const ph=sel('playHUD');if(ph)ph.style.display='block';ph?.classList.add('active')
+    const pt=sel('playTag');if(pt)pt.style.display='inline'
+    setText('pNameLbl',raw+' ['+playerRole+']')
+    setText('pRoleLbl',ROLES.find(r=>r.id===playerRole)?.desc||'')
+    if(isMobile){const mz=sel('mobZone');if(mz)mz.style.display='block';setupJoystick()}
+    rebuildActionBar()
+    log(`🎮 You are ${raw} (${playerRole})! ${isMobile?'Use joystick to move.':'WASD to move.'}`, 'ca')
+  },250)
+}
+
+// Role-based action bar
+function rebuildActionBar(){
+  const bar=sel('pActionBar');if(!bar)return;bar.innerHTML=''
+  const add=(label,cls,fn,title)=>{const b=document.createElement('div');b.className='pab '+cls;b.textContent=label;b.title=title||label;b.addEventListener('click',fn);b.addEventListener('touchstart',e=>{e.preventDefault();fn()},{passive:false});bar.appendChild(b)}
+  // universal
+  add('🍖 Eat','grn',playerEat,'Eat food within reach')
+  add('💬 Chat','',playerChat,'Send a message')
+  // role-specific
+  if(playerRole==='aggressive'){add('⚔ Attack','red',playerAttack,'Attack nearest AI');add('💀 Rob','red',playerRob,'Steal money from nearby AI')}
+  if(playerRole==='builder'){add('🏗 Build','blue',playerBuild_btn,'Build structure (💰5)');add('💣 Destroy','red',playerDestroyNearest,'Destroy nearest structure');add('⬆ Upgrade','gold',playerUpgrade,'Upgrade team base')}
+  if(playerRole==='social'){add('🤝 Invite','grn',playerInvite,'Invite nearby AI to team');add('💰 Pay','gold',playerPay,'Pay nearby AI 💰5');add('🏴 Team','gold',playerFormTeam,'Create/manage team');add('✔ Accept','grn',()=>{if(pendingInvite)respondInvite(true)},'Accept invite')}
+  if(playerRole==='explorer'){add('🗺 Scout','prp',playerScout,'Discover nearby animals');add('💰 Loot','gold',playerLoot,'Collect money from area')}
+  if(playerRole==='cop'){add('👮 Arrest','red',playerArrest,'Arrest nearest criminal');add('🔓 Release','gold',playerRelease,'Release AI from prison')}
+  if(playerRole==='doctor'){add('💊 Heal','grn',playerHealNearby,'Heal nearest injured AI');add('👶 Birth','grn',playerBirth,'Deliver a baby at hospital');add('💉 Cure','grn',playerCureAll,'Mass heal nearby AIs')}
+  if(playerRole==='author'){add('✏ Write','prp',playerWrite,'Write a story');add('📖 Read','prp',showLatestStory,'Read latest story')}
+  if(playerRole==='zookeeper'){add('🐾 Tame','grn',playerTame,'Tame a nearby animal');add('🔒 Return','gold',playerReturnAnimal,'Return escaped animal to zoo');add('🐟 Feed','gold',playerFeedAnimals,'Feed nearby animals')}
+}
+
+function playerEat(){
+  if(!playerAI)return;let ate=false
+  foods=foods.filter(f=>{if(!ate&&dist(playerAI,f)<25){playerAI.food=Math.min(100,playerAI.food+f.value);playerAI.hunger=Math.min(100,playerAI.hunger+f.value*.65);playerAI.money+=1;beep(500,.09,.05);ate=true;return false};return true})
+  if(!ate)log('🎮 No food nearby!','cy')
+}
+function playerChat(){const msg=prompt('Your message:');if(msg&&playerAI){playerAI.speech=msg.substring(0,32);playerAI.speechTimer=220;log(`[${playerAI.name}]: ${msg}`,'cy');const resp=AIs.filter(a=>!a.isPlayer&&dist(a,playerAI)<120).slice(0,2);resp.forEach((ai,i)=>setTimeout(()=>{const p=getPhrase(ai);log(`[${ai.name}]: ${p}`,'cai');ai.speech=p;ai.speechTimer=160},350+i*350))}}
+function playerAttack(){
+  if(!playerAI)return;let hit=false
+  AIs.forEach(o=>{if(o===playerAI||admins.has(o.name))return;if(dist(playerAI,o)<40&&!hit){o.hp-=15;beep(200,.1,.08,'sawtooth');playerAI.speech='⚔!';playerAI.speechTimer=35;hit=true;if(o.hp<=0){playerAI.kills++;o._dead=true;o._deathCause=`${playerAI.name}(player)`;log(`🎮 You killed ${o.name}!`,'cy');logEvent(playerAI.name,`killed ${o.name}`)}}})
+  if(monster&&dist(playerAI,monster)<60){monster.hp-=25;beep(250,.15,.08,'sawtooth');log('🎮 Hit the monster!','cy')}
+  if(!hit&&!monster)log('🎮 Nothing in range!','cy')
+}
+function playerRob(){if(!playerAI)return;const near=AIs.find(o=>o!==playerAI&&dist(playerAI,o)<40);if(near&&near.money>0){const amt=Math.min(near.money,Math.floor(rand(3,10)));near.money-=amt;playerAI.money+=amt;beep(800,.1,.06);log(`🎮 Robbed ${near.name} of 💰${amt}!`,'cy')}else log('🎮 Nobody to rob nearby!','cy')}
+function playerBuild_btn(){if(!playerAI)return;if(playerAI.money<5){log('🎮 Need 💰5 to build!','cy');return};const bx=playerAI.x+rand(-20,20),by=playerAI.y+rand(-20,20);if(isInWater(bx,by)){log('🎮 Can\'t build on water!','cy');return};builds.push({x:bx,y:by,owner:playerAI.name,team:playerAI.team,hp:100,maxHp:100,level:1});playerAI.money-=5;playBuild();log('🎮 Built a structure! 💰-5','cy');logEvent(playerAI.name,'built a structure')}
+function playerDestroyNearest(){if(!playerAI)return;const idx=builds.findIndex(b=>dist(playerAI,b)<35);if(idx>=0){builds.splice(idx,1);playGrief();log('🎮 Destroyed a structure!','cy')}else log('🎮 No structure nearby!','cy')}
+function playerUpgrade(){if(!playerAI)return;const mt=getTeam(playerAI);if(!mt||mt.baseIdx===null){log('🎮 Join a team with a base first!','cy');return};const b=builds[mt.baseIdx];if(!b){log('🎮 Base not found','cy');return};if(b.level>=MAX_BLD_LV){log('🎮 Base is max level!','cy');return};if(playerAI.money<20){log('🎮 Need 💰20 to upgrade!','cy');return};b.level++;mt.level=b.level;playerAI.money-=20;beep(880,.2,.07);beep(1100,.2,.05);log(`🎮 Base upgraded to Lv${b.level}! 💰-20`,'cy')}
+function playerInvite(){if(!playerAI)return;const mt=getTeam(playerAI);if(!mt){log('🎮 Create a team first (Team button)!','cy');return};const near=AIs.find(o=>o!==playerAI&&!o.team&&dist(playerAI,o)<60);if(near){near.team=mt.id;mt.members.add(near.name);log(`🎮 Invited ${near.name} to ${mt.name}!`,'cy');near.speech=`Joined ${mt.name}!`;near.speechTimer=100}else log('🎮 No teamless AI nearby!','cy')}
+function playerFormTeam(){if(!playerAI)return;if(playerAI.team){log(`🎮 Already in ${getTeam(playerAI)?.name||'a team'}!`,'cy');return};const t=createTeam(playerAI);log(`🎮 Founded team "${t.name}"!`,'cy')}
+function playerPay(){if(!playerAI||playerAI.money<2)return;const near=AIs.find(o=>o!==playerAI&&dist(playerAI,o)<50);if(near){near.money+=5;playerAI.money-=5;near.food=Math.min(100,near.food+10);playCash();near.speech='Thanks! 💰';near.speechTimer=100;log(`🎮 Paid ${near.name} 💰5`,'cy')}else log('🎮 Nobody nearby!','cy')}
+function playerScout(){if(!playerAI)return;let found=0;animals.forEach(a=>{if(!a._discovered&&dist(playerAI,a)<100){a._discovered=true;found++;log(`🟣 Discovered ${a.emoji} ${a.name}!`,'czoo')}});playerAI.money+=found*2;if(!found)log('🎮 No animals to discover nearby','cy')}
+function playerLoot(){if(!playerAI)return;const gain=Math.floor(rand(3,12));playerAI.money+=gain;playCash();log(`🎮 Found 💰${gain} on the ground!`,'cy')}
+function playerArrest(){if(!playerAI)return;const sus=AIs.find(o=>o!==playerAI&&(o.personality==='aggressive'||o.personality==='griefer')&&!o.inPrison&&dist(playerAI,o)<45);if(sus){sus.inPrison=true;sus.prisonTimer=Math.floor(rand(600,1400));const p=institutions.prison;if(p){sus.x=p.x+p.w/2+rand(-10,10);sus.y=p.y+p.h/2+rand(-10,10)};playArrest();log(`🎮 You arrested ${sus.name}!`,'cy');logEvent(sus.name,`was arrested by ${playerAI.name}`)}else log('🎮 No criminal nearby!','cy')}
+function playerRelease(){if(!playerAI)return;const inmate=AIs.find(o=>o.inPrison&&dist(playerAI,o)<50);if(inmate){inmate.inPrison=false;inmate.prisonTimer=0;log(`🎮 Released ${inmate.name}`,'cy')}else log('🎮 No prisoner nearby!','cy')}
+function playerHealNearby(){if(!playerAI)return;const near=AIs.filter(o=>o!==playerAI&&dist(playerAI,o)<50&&o.hp<80).slice(0,3);if(near.length){near.forEach(o=>{o.hp=Math.min(100,o.hp+30);o.food=Math.min(100,o.food+15)});playHeal();log(`🎮 Healed ${near.length} AI(s)!`,'cy')}else log('🎮 No injured AIs nearby!','cy')}
+function playerBirth(){if(!playerAI)return;if(!nearInst(institutions.hospital,playerAI.x,playerAI.y,35)){log('🎮 Go to the hospital first!','cy');return};const parent=AIs.find(o=>o!==playerAI&&dist(playerAI,o)<40&&o.food>50&&o.age>30);if(parent){const child=makeAI({name:nameGen(),x:parent.x+rand(-15,15),y:parent.y+rand(-15,15),personality:parent.personality,food:35,hp:80,age:0,team:parent.team,money:5});AIs.push(child);parent.food-=30;playBorn();log(`🎮 Dr.${playerAI.name} delivered ${child.name}!`,'cd');logEvent(child.name,`was born (delivered by Dr.${playerAI.name})`)}else log('🎮 No expecting parent nearby!','cy')}
+function playerCureAll(){if(!playerAI)return;const cured=AIs.filter(o=>o!==playerAI&&dist(playerAI,o)<80&&o.hp<100);cured.forEach(o=>o.hp=Math.min(100,o.hp+20));playHeal();log(`🎮 Mass-healed ${cured.length} AIs!`,'cy')}
+function playerWrite(){if(!playerAI)return;if(!nearInst(institutions.library,playerAI.x,playerAI.y,40)){log('🎮 Go to the library to write!','cy');return};if(Object.keys(lifeEvents).filter(n=>lifeEvents[n]?.length>=3).length===0){log('🎮 Not enough events to write about yet','cy');return};writeStory(playerAI);log('🎮 You wrote a story!','cy')}
+function playerTame(){if(!playerAI)return;const a=animals.find(o=>!o.tamed&&o.tamable&&!o.inZoo&&dist(playerAI,o)<60);if(a){a.tamed=true;a.ownerId=playerAI.name;log(`🎮 You tamed a ${a.emoji} ${a.name}!`,'czoo');playerAI.speech=`Tamed ${a.emoji}!`;playerAI.speechTimer=120;beep(700,.15,.06);logEvent(playerAI.name,`tamed a ${a.name}`)}else log('🎮 No tameable animal nearby!','cy')}
+function playerReturnAnimal(){if(!playerAI)return;const zoo=institutions.zoo;if(!zoo){log('🎮 No zoo!','cy');return};const a=animals.find(o=>!o.inZoo&&o._discovered&&dist(playerAI,o)<50&&!o.aggressive);if(a){a.inZoo=true;a.x=zoo.x+rand(10,zoo.w-10);a.y=zoo.y+rand(10,zoo.h-10);log(`🎮 Returned ${a.emoji} to zoo!`,'czoo')}else log('🎮 No escaped animal nearby!','cy')}
+function playerFeedAnimals(){if(!playerAI)return;if(playerAI.food<10){log('🎮 Not enough food!','cy');return};animals.filter(a=>dist(playerAI,a)<60).forEach(a=>{a.hunger=Math.min(100,a.hunger+30)});playerAI.food-=10;beep(500,.1,.05);log('🎮 Fed nearby animals!','czoo')}
+
+function respondInvite(accept){
+  closeModal('modalInvite')
+  if(!pendingInvite||!playerAI){pendingInvite=null;return}
+  if(accept){playerAI.team=pendingInvite.team.id;pendingInvite.team.members.add(playerAI.name);log(`🎮 Joined ${pendingInvite.team.name}!`,'cy');logEvent(playerAI?.name||'?',`joined team "${pendingInvite.team.name}"`)}
+  else log('🎮 Declined invite','cy')
+  pendingInvite=null
+}
+
+// PLAYER UPDATE
+function updatePlayerAI(){
+  if(!playerAI||!playMode)return
+  const p=playerAI
+  p.age+=0.02;p.food-=0.008;p.hunger-=0.005
+  if(p.food<=0){p.hp-=0.06;p.food=0}
+  if(p.hunger<=0){p.hp-=0.03;p.hunger=0}
+  if(p.hp<=0){log('💀 You died! Respawning…','cm');p.hp=100;p.food=60;p.hunger=80;p.x=rand(50,W-50);p.y=rand(50,H-50)}
+  p.size=p.age<30?3:5
+  // auto-eat food by walking over it
+  foods=foods.filter(f=>{if(dist(p,f)<14){p.food=Math.min(100,p.food+f.value);p.hunger=Math.min(100,p.hunger+f.value*.65);p.money+=1;beep(500,.09,.05);return false};return true})
+  // keyboard movement
+  const sp=2.1
+  if(keys.w||keys.arrowup)p.vy-=sp*.5
+  if(keys.s||keys.arrowdown)p.vy+=sp*.5
+  if(keys.a||keys.arrowleft)p.vx-=sp*.5
+  if(keys.d||keys.arrowright)p.vx+=sp*.5
+  // joystick
+  p.vx+=joyVX*sp*.4;p.vy+=joyVY*sp*.4
+  p.vx*=.82;p.vy*=.82
+  // player passes through water freely (FIX for restricted area)
+  p.x+=p.vx;p.y+=p.vy
+  p.x=clamp(p.x,5,W-5);p.y=clamp(p.y,5,H-5)
+  // HUD update
+  const hpf=clamp(p.hp/100,0,1),hgf=clamp(p.hunger/100,0,1)
+  const hpb=sel('pHPBar');if(hpb){hpb.style.width=hpf*100+'%';hpb.style.background=hpf>.5?'#44ff88':hpf>.25?'#ffaa00':'#ff2222'}
+  const hgb=sel('pHungerBar');if(hgb){hgb.style.width=hgf*100+'%'}
+  setText('pMoney',Math.round(p.money))
+  setText('pAge',Math.floor(p.age))
+  const t=getTeam(p);const tl=sel('pTeamLbl');if(tl){tl.textContent=t?t.name:'None';tl.style.color=t?t.color:'#aaaaaa'}
+}
+
+// KEYBOARD
+const keys={}
+document.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;keys[e.key]=true;if(!playMode||!playerAI)return;if(e.key.toLowerCase()==='e')playerAttack();if(e.key.toLowerCase()==='f')playerPay();if(e.key.toLowerCase()==='g')playerInvite();if(e.key.toLowerCase()==='h'){playerHealNearby && playerHealNearby()};if(e.key.toLowerCase()==='r')playerBuild_btn&&playerBuild_btn()})
+document.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;keys[e.key]=false})
+canvas.addEventListener('contextmenu',e=>{e.preventDefault();if(playMode&&playerAI)playerBuild_btn()})
+canvas.addEventListener('click',e=>{if(playMode&&playerAI){const rect=canvas.getBoundingClientRect(),mx=e.clientX-rect.left,my=e.clientY-rect.top;const idx=builds.findIndex(b=>dist({x:mx,y:my},b)<22);if(idx>=0){builds.splice(idx,1);playGrief();log('🎮 Destroyed a structure!','cy')}}})
+
+function setupJoystick(){
+  const zone=sel('mobZone'),thumb=sel('jThumb');if(!zone||!thumb)return
+  let jActive=false
+  function onJS(e){jActive=true;e.preventDefault()}
+  function onJM(e){if(!jActive)return;e.preventDefault();const t=e.touches?e.touches[0]:e;const rect=zone.getBoundingClientRect();const dx=clamp(t.clientX-rect.left-57,-48,48),dy=clamp(t.clientY-rect.top-57,-48,48);thumb.style.left=(57+dx-19)+'px';thumb.style.top=(57+dy-19)+'px';joyVX=dx/48;joyVY=dy/48}
+  function onJE(){jActive=false;thumb.style.left='38px';thumb.style.top='38px';joyVX=0;joyVY=0}
+  zone.addEventListener('touchstart',onJS,{passive:false});zone.addEventListener('touchmove',onJM,{passive:false});zone.addEventListener('touchend',onJE,{passive:false})
+}
+
+// ════════════════════════════════════════════════
+// WEATHER
+// ════════════════════════════════════════════════
+function updateWeather(){
+  weatherTimer--;if(weatherTimer<=0){weatherType=['clear','clear','rain','snow','fog','storm'][Math.floor(rand(0,6))];weatherTimer=Math.floor(rand(900,2800));if(weatherType!=='clear')log(`🌤 Weather: ${weatherType.toUpperCase()}`,'ce')}
+  if(weatherType==='rain'&&Math.random()<.35){for(let i=0;i<3;i++)particles.push({x:rand(0,W),y:0,vx:rand(-.5,.5),vy:rand(4,7),type:'rain',life:Math.floor(rand(30,65))})}
+  if(weatherType==='snow'&&Math.random()<.18)particles.push({x:rand(0,W),y:0,vx:rand(-1,1),vy:rand(1,2.4),type:'snow',life:Math.floor(rand(80,200))})
+  if(weatherType==='storm'&&Math.random()<.004)particles.push({x:rand(0,W),y:0,vx:0,vy:H,type:'lightning',life:7})
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life--});particles=particles.filter(p=>p.life>0&&p.y<H+10)
+}
+
+// ════════════════════════════════════════════════
+// DRAW
+// ════════════════════════════════════════════════
+function skyBright(){const p=dayPhase;if(p<.25)return p/.25;if(p<.5)return 1-(p-.25)/.25*.05;if(p<.75)return .95-(p-.5)/.25*.95;return(p-.75)/.25}
+function genStars(){stars=[];for(let i=0;i<130;i++)stars.push({x:rand(0,W),y:rand(0,H*.55),r:rand(.4,2.1),tw:rand(0,Math.PI*2)})}
+function buildTexture(){
+  const cfg=BIOMES[worldBiome];texCanvas=document.createElement('canvas');texCanvas.width=W;texCanvas.height=H;const tc=texCanvas.getContext('2d')
+  tc.fillStyle=cfg.ground;tc.fillRect(0,0,W,H)
+  for(let i=0;i<500;i++){const x=rand(0,W),y=rand(0,H),r=rand(3,20);tc.globalAlpha=rand(.03,.1);tc.fillStyle=worldBiome==='tundra'?'#fff':worldBiome==='desert'?'#c8a030':worldBiome==='lava'?'#cc2200':worldBiome==='cyber'?'#ff00ff':'#00bb22';tc.beginPath();tc.arc(x,y,r,0,Math.PI*2);tc.fill()}
+  tc.globalAlpha=1;tc.font='13px serif';tc.textAlign='center'
+  for(let i=0;i<cfg.treeDens;i++){const x=rand(10,W-10),y=rand(10,H-10);if(!isInWater(x,y))tc.fillText(cfg.tree,x,y)}
+  if(worldBiome==='cyber'){tc.strokeStyle='#ff00ff15';tc.lineWidth=1;for(let i=0;i<22;i++){tc.beginPath();tc.moveTo(rand(0,W),rand(0,H));tc.lineTo(rand(0,W),rand(0,H));tc.stroke()}}
+}
+function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.arcTo(x+w,y,x+w,y+r,r);c.lineTo(x+w,y+h-r);c.arcTo(x+w,y+h,x+w-r,y+h,r);c.lineTo(x+r,y+h);c.arcTo(x,y+h,x,y+h-r,r);c.lineTo(x,y+r);c.arcTo(x,y,x+r,y,r);c.closePath()}
+function drawScene(){
+  const bright=skyBright(),cfg=BIOMES[worldBiome],tops=cfg.skyTop,bots=cfg.skyBot
+  const si=Math.min(Math.floor(bright*3),2),t=bright*3-si
+  const sg=ctx.createLinearGradient(0,0,0,H*.5);sg.addColorStop(0,lerpC(tops[si],tops[si+1],clamp(t,0,1)));sg.addColorStop(1,lerpC(bots[si],bots[si+1],clamp(t,0,1)));ctx.fillStyle=sg;ctx.fillRect(0,0,W,H*.5)
+  if(bright<.6){const a=(1-bright/.6)*.85;ctx.save();stars.forEach(s=>{s.tw+=.025;ctx.globalAlpha=a*(.55+Math.sin(s.tw)*.45);ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill()});ctx.restore()}
+  if(bright>.08){ctx.save();ctx.globalAlpha=Math.min(1,bright*1.2);ctx.shadowBlur=33;ctx.shadowColor='#ffa000';ctx.fillStyle='#ffe060';ctx.beginPath();ctx.arc(W*.15+dayPhase*W*.7,H*.08+Math.sin(dayPhase*Math.PI)*H*.27,11,0,Math.PI*2);ctx.fill();ctx.restore()}
+  if(bright<.65){ctx.save();ctx.globalAlpha=1-bright;ctx.shadowBlur=20;ctx.shadowColor='#8899ff';ctx.fillStyle='#e0e8ff';ctx.beginPath();ctx.arc(W*.82,H*.07,10,0,Math.PI*2);ctx.fill();ctx.restore()}
+  if(texCanvas)ctx.drawImage(texCanvas,0,H*.45,W,H*.55,0,H*.45,W,H*.55);else{ctx.fillStyle=cfg.ground;ctx.fillRect(0,H*.45,W,H*.55)}
+  ctx.strokeStyle='rgba(0,0,0,.2)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,H*.45);ctx.lineTo(W,H*.45);ctx.stroke()
+  waters.forEach(w=>{ctx.save();ctx.globalAlpha=w.alpha+Math.sin(tickCount*.04+w.x*.01)*.01;const wg=ctx.createLinearGradient(w.x,w.y,w.x+w.w,w.y+w.h);wg.addColorStop(0,w.color);wg.addColorStop(.5,lerpC(w.color,'#88ccff',.2));wg.addColorStop(1,w.color);ctx.fillStyle=wg;if(w.type==='lake'){ctx.beginPath();ctx.ellipse(w.x+w.w/2,w.y+w.h/2,w.w/2,w.h/2,0,0,Math.PI*2);ctx.fill()}else ctx.fillRect(w.x,w.y,w.w,w.h);ctx.globalAlpha=.12+Math.sin(tickCount*.08)*.07;ctx.fillStyle='#fff';for(let i=0;i<2;i++){ctx.beginPath();ctx.arc(w.x+rand(0,w.w),w.y+rand(0,w.h),1,0,Math.PI*2);ctx.fill()};ctx.restore()})
+  Object.values(institutions).forEach(inst=>{if(!inst)return;ctx.save();ctx.fillStyle='rgba(0,255,208,.06)';ctx.strokeStyle='rgba(0,255,208,.28)';ctx.lineWidth=1.5;roundRect(ctx,inst.x,inst.y,inst.w,inst.h,4);ctx.fill();ctx.stroke();const fs=Math.min(inst.w,inst.h)*.44;ctx.font=`${fs}px serif`;ctx.textAlign='center';ctx.shadowBlur=8;ctx.shadowColor='rgba(0,255,208,.4)';ctx.fillText(inst.emoji,inst.x+inst.w/2,inst.y+inst.h/2+fs*.35);ctx.restore()})
+  if(bright<.5){ctx.save();ctx.globalAlpha=(.5-bright)*1.15;ctx.fillStyle='#010408';ctx.fillRect(0,0,W,H);ctx.restore()}
+  if(weatherType==='fog'){ctx.save();ctx.globalAlpha=.3;const fg=ctx.createLinearGradient(0,0,0,H);fg.addColorStop(0,'#c8d8e8');fg.addColorStop(1,'#c8d8e830');ctx.fillStyle=fg;ctx.fillRect(0,0,W,H);ctx.restore()}
+  flashlights.forEach(fl=>{ctx.save();const rg=ctx.createRadialGradient(fl.x,fl.y,0,fl.x,fl.y,105);rg.addColorStop(0,'rgba(255,250,180,.2)');rg.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=rg;ctx.fillRect(fl.x-105,fl.y-105,210,210);ctx.restore()})
+}
+const PC={aggressive:'#ff5555',builder:'#5599ff',social:'#55ff99',explorer:'#bb88ff',griefer:'#ff8800',cop:'#4499ff',doctor:'#ff99dd',teacher:'#ffcc44',zookeeper:'#88ddaa',author:'#cc88ff',librarian:'#ff99cc'}
+function draw(){
+  ctx.clearRect(0,0,W,H);drawScene()
+  builds.forEach((b,i)=>{const tc=teams.find(t=>t.baseIdx===i),col=tc?tc.color:'#00ffd0',lv=b.level||1;ctx.save();ctx.shadowBlur=lv*3+3;ctx.shadowColor=col;ctx.strokeStyle=col+'88';ctx.lineWidth=lv*.5+.5;ctx.fillStyle=col+'10';const sz=8+lv*3;roundRect(ctx,b.x-sz/2,b.y-sz/2,sz,sz,2);ctx.fill();ctx.stroke();if(lv>1){ctx.fillStyle=col;ctx.font='7px Share Tech Mono';ctx.textAlign='center';ctx.fillText('L'+lv,b.x,b.y+3)};if(b.hp<b.maxHp){ctx.fillStyle='#0a0a0a';ctx.fillRect(b.x-9,b.y-sz/2-3,18,2);ctx.fillStyle='#ff4444';ctx.fillRect(b.x-9,b.y-sz/2-3,18*(b.hp/b.maxHp),2)};ctx.restore()})
+  foods.forEach(f=>{ctx.save();ctx.shadowBlur=7;ctx.shadowColor=f.color||'#44ff66';ctx.fillStyle=f.color||'#44ff66';ctx.beginPath();ctx.arc(f.x,f.y,3.5,0,Math.PI*2);ctx.fill();ctx.restore()})
+  animals.forEach(a=>{ctx.save();ctx.font=`${(a.size||4)*2.2}px serif`;ctx.textAlign='center';ctx.shadowBlur=a.tamed?12:5;ctx.shadowColor=a.tamed?'#88ffaa':'#ffaa33';ctx.fillText(a.emoji,a.x,a.y+(a.size||4)*.5);if(a.hp<a.maxHp){ctx.fillStyle='#111';ctx.fillRect(a.x-8,a.y-(a.size||4)-4,16,2);ctx.fillStyle='#ff4455';ctx.fillRect(a.x-8,a.y-(a.size||4)-4,16*(a.hp/a.maxHp),2)};ctx.restore()})
+  AIs.forEach(ai=>{
+    const isAdmin=admins.has(ai.name),myTeam=getTeam(ai),frozen=frozenAIs.has(ai.name),isP=ai.isPlayer
+    let color=PC[ai.personality]||'#aaaaaa';if(isAdmin)color='#ffd700';if(frozen)color='#88ddff';if(isP)color='#ffffff'
+    const tColor=myTeam?myTeam.color:null
+    ctx.save()
+    if(isP){ctx.shadowBlur=28;ctx.shadowColor='#ffffff';ctx.strokeStyle='#ffffff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(ai.x,ai.y,ai.size+5,0,Math.PI*2);ctx.stroke()}
+    if(tColor&&!isP){ctx.strokeStyle=tColor+'bb';ctx.lineWidth=1.8;ctx.shadowBlur=5;ctx.shadowColor=tColor;ctx.beginPath();ctx.arc(ai.x,ai.y,ai.size+2.5,0,Math.PI*2);ctx.stroke()}
+    ctx.shadowBlur=isP?28:isAdmin?20:8;ctx.shadowColor=isP?'#ffffff':color;ctx.fillStyle=color
+    const pulse=isAdmin?Math.sin(tickCount*.1)*1.5:isP?Math.sin(tickCount*.15)*1.2:0
+    ctx.beginPath();ctx.arc(ai.x,ai.y,ai.size+pulse,0,Math.PI*2);ctx.fill();ctx.restore()
+    const icons=[];if(ai.hasFlashlight)icons.push('🔦');if(frozen)icons.push('❄️');if(ai.inPrison)icons.push('🔒');if(ai.atSchool)icons.push('📚');if(ai.atArcade)icons.push('🎮');if(ai.shopping)icons.push('🛒');if(ai.atLibrary)icons.push('📖');if(isP)icons.push('🎮')
+    if(icons.length){ctx.font='9px serif';ctx.textAlign='center';ctx.fillText(icons.slice(0,3).join(''),ai.x,ai.y-ai.size-10)}
+    const bw=22,bx=ai.x,by=ai.y-ai.size-2,hpF=clamp(ai.hp/100,0,1),hgF=clamp(ai.hunger/100,0,1)
+    ctx.fillStyle='#0a0a0a';ctx.fillRect(bx-bw/2,by-2,bw,2);ctx.fillStyle=hpF>.5?'#44ff88':hpF>.25?'#ffaa00':'#ff2222';ctx.fillRect(bx-bw/2,by-2,bw*hpF,2)
+    ctx.fillStyle='#0a0a0a';ctx.fillRect(bx-bw/2,by-5,bw,2);ctx.fillStyle=hgF>.5?'#ff8844':hgF>.25?'#ffcc22':'#ff2222';ctx.fillRect(bx-bw/2,by-5,bw*hgF,2)
+    ctx.save();ctx.font=isP?'bold 9.5px Share Tech Mono,monospace':isAdmin?'bold 9px Share Tech Mono,monospace':'8px Share Tech Mono,monospace';ctx.textAlign='center'
+    const nc=isP?'#ffffff':tColor||color;ctx.fillStyle=nc;ctx.shadowBlur=isAdmin||isP?9:2;ctx.shadowColor=nc
+    const picon={cop:'👮',doctor:'🏥',teacher:'🏫',zookeeper:'🐾',author:'📚',librarian:'🏛'}
+    const lbl=(isP?'★ ':isAdmin?'★':(picon[ai.personality]||''))+ai.name+(myTeam?'·'+myTeam.name.split(' ')[0]:'')
+    ctx.fillText(lbl,ai.x,ai.y-ai.size-(icons.length?21:9));ctx.restore()
+    if(ai.speech&&ai.speechTimer>0){const txt=ai.speech.substring(0,30)+(ai.speech.length>30?'…':''),sw=Math.min(160,txt.length*5+12),sx=clamp(ai.x-sw/2,2,W-sw-2),sy=Math.max(18,ai.y-ai.size-34);ctx.save();ctx.fillStyle='rgba(0,5,16,.9)';ctx.strokeStyle='rgba(0,255,208,.42)';ctx.lineWidth=.7;roundRect(ctx,sx,sy-11,sw,14,3);ctx.fill();ctx.stroke();ctx.fillStyle=isP?'#ffffff':'#ccffee';ctx.font='7.5px Share Tech Mono,monospace';ctx.textAlign='left';ctx.fillText(txt,sx+3,sy);ctx.restore()}
+  })
+  if(monster){ctx.save();ctx.font=`${monster.size*2.3}px serif`;ctx.textAlign='center';ctx.shadowBlur=28;ctx.shadowColor=monster.color;ctx.fillText(monster.emoji,monster.x,monster.y+monster.size);if(monster.tentacles)monster.tentacles.forEach(t=>{ctx.save();ctx.globalAlpha=t.timer/80*.65;ctx.fillStyle='#aa22ff';ctx.shadowBlur=10;ctx.shadowColor='#aa22ff';ctx.beginPath();ctx.arc(t.x,t.y,6,0,Math.PI*2);ctx.fill();ctx.restore()});const needHP=['Killbot-9000','Shadow Kraken','Ice Witch'];if(needHP.includes(monster.name)){const mw=34,mhp=clamp(monster.hp/monster.maxHp,0,1);ctx.fillStyle='#111';ctx.fillRect(monster.x-mw/2,monster.y-monster.size-6,mw,3);ctx.fillStyle=monster.color;ctx.fillRect(monster.x-mw/2,monster.y-monster.size-6,mw*mhp,3);ctx.fillStyle='rgba(200,220,255,.8)';ctx.font='7px Share Tech Mono';ctx.textAlign='center';ctx.fillText(Math.round(monster.hp)+'/'+monster.maxHp,monster.x,monster.y-monster.size-8)};ctx.restore()}
+  particles.forEach(p=>{ctx.save();if(p.type==='rain'){ctx.strokeStyle='rgba(100,160,255,.45)';ctx.lineWidth=.9;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+p.vx*3,p.y+p.vy*3);ctx.stroke()}else if(p.type==='snow'){ctx.fillStyle='rgba(200,220,255,.65)';ctx.beginPath();ctx.arc(p.x,p.y,2,0,Math.PI*2);ctx.fill()}else if(p.type==='lightning'){ctx.strokeStyle='rgba(255,255,150,.75)';ctx.lineWidth=2;ctx.shadowBlur=18;ctx.shadowColor='#ffff88';ctx.beginPath();ctx.moveTo(p.x,0);ctx.lineTo(p.x+rand(-10,10),H);ctx.stroke();beep(rand(100,400),.1,.07,'sawtooth')};ctx.restore()})
+  // player reach indicator
+  if(playMode&&playerAI){ctx.save();ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=.8;ctx.setLineDash([3,5]);ctx.beginPath();ctx.arc(playerAI.x,playerAI.y,45,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.restore()}
+}
+
+// ════════════════════════════════════════════════
+// OWNER CMDS
+// ════════════════════════════════════════════════
+function ownerCmd(c){
+  switch(c){
+    case 'killall':AIs=AIs.filter(a=>a.isPlayer);log('☠ Killed all','co');break
+    case 'adminall':AIs.forEach(a=>admins.add(a.name));log('★ Admin all','co');break
+    case 'healall':AIs.forEach(a=>{a.hp=100;a.food=80;a.hunger=80});log('💊 Healed all','co');break
+    case 'feedall':AIs.forEach(a=>{a.food=100;a.hunger=100});log('🍖 Fed all','co');break
+    case 'peace':AIs.forEach(a=>{if(a.memory)a.memory.lastEnemyPos=null});log('☮ Peace','co');break
+    case 'releaseall':AIs.forEach(a=>{a.inPrison=false;a.prisonTimer=0});log('🔓 Released all','co');break
+    case 'nukebuilds':builds=[];teams.forEach(t=>t.baseIdx=null);log('💣 Nuked builds','co');beep(55,.8,.15,'sawtooth');break
+    case 'disbandall':teams.forEach(disbandTeam);teams=[];log('💔 Disbanded teams','co');break
+    case 'clearbans':banned.clear();log('↩ Bans cleared','co');break
+    case 'killmonster':if(monster){log(`⚔ Slew ${monster.emoji}!`,'co');monster=null;const mp=sel('monsterPanel');if(mp)mp.style.display='none';const ma=sel('monsterAlert');if(ma)ma.style.display='none'}break
+    case 'skipnight':dayPhase=.1;nightMonsterSpawned=false;if(monster){monster=null;const mp=sel('monsterPanel');if(mp)mp.style.display='none';const ma=sel('monsterAlert');if(ma)ma.style.display='none'}log('⏭ Forced dawn','co');break
+    case 'skipday':dayPhase=.6;log('🌑 Forced night','co');break
+    case 'spawnzoo':spawnZooAnimals();break
+  }
+}
+function spawnZooAnimals(){const zoo=institutions.zoo;if(!zoo)return;for(let i=0;i<6;i++){spawnAnimal(i%ATYPES.length,zoo.x+15+(i%3)*25,zoo.y+15+Math.floor(i/3)*25,false,null);animals[animals.length-1].inZoo=true};log('🐖 Zoo filled!','czoo')}
+
+function runCmd(){
+  const raw=sel('cmdInput')?.value?.trim();if(!raw)return;sel('cmdInput').value=''
+  const parts=raw.replace(/^\//,'').split(' '),cmd=parts[0].toLowerCase(),name=parts[1]?.toUpperCase(),extra=parts.slice(2).join(' ')
+  const fa=n=>AIs.find(a=>a.name===n),nf=n=>log(`"${n}" not found`,'cs')
+  switch(cmd){
+    case 'kill':if(!name){killRandom();break}const ka=fa(name);if(ka){AIs=AIs.filter(a=>a!==ka);log(`Killed ${name}`,'co');playDie()}else nf(name);break
+    case 'ban':if(!name){banRandom();break}const ba=fa(name);if(ba){banned.add(ba.name);AIs=AIs.filter(a=>a!==ba);log(`Banned ${name}`,'co')}else nf(name);break
+    case 'unban':if(name)banned.delete(name);else banned.clear();log(`Unbanned ${name||'all'}`,'co');break
+    case 'admin':if(!name){hireAdmin();break}const aa=fa(name);if(aa){admins.add(aa.name);log(`${name} ★ Admin`,'ca')}else nf(name);break
+    case 'dismiss':if(name)admins.delete(name);log(`${name||'?'} demoted`,'co');break
+    case 'heal':const ha=name?fa(name):null;(ha?[ha]:AIs).filter(Boolean).forEach(a=>{a.hp=100;a.food=80;a.hunger=80});log(`Healed ${name||'all'}`,'co');break
+    case 'feed':const ffa=name?fa(name):null;(ffa?[ffa]:AIs).filter(Boolean).forEach(a=>{a.food=100;a.hunger=100});log(`Fed ${name||'all'}`,'co');break
+    case 'freeze':const fza=fa(name);if(fza){frozenAIs.has(name)?frozenAIs.delete(name):frozenAIs.add(name);log(`${name} ${frozenAIs.has(name)?'frozen':'unfrozen'}`,'co')}else log('/freeze NAME','cs');break
+    case 'tp':const tpa=fa(name),tx2=parseFloat(parts[2]),ty2=parseFloat(parts[3]);if(tpa&&!isNaN(tx2)){tpa.x=clamp(tx2,0,W);tpa.y=clamp(ty2,0,H);log(`TP'd ${name}`,'co')}else log('/tp NAME x y','cs');break
+    case 'tpall':const gx=parseFloat(parts[1]),gy=parseFloat(parts[2]);if(!isNaN(gx)){AIs.forEach(a=>{a.x=clamp(gx+rand(-20,20),5,W-5);a.y=clamp(gy+rand(-20,20),5,H-5)});log(`TP'd all to (${Math.round(gx)},${Math.round(gy)})`,'co')}else log('/tpall x y','cs');break
+    case 'msg':const ma=fa(name);if(ma&&extra){ma.speech=extra;ma.speechTimer=220;log(`[You→${name}]: ${extra}`,'co')}else log('/msg NAME text','cs');break
+    case 'give':const ga=fa(name);if(ga){ga.food=Math.min(100,ga.food+50);ga.hunger=Math.min(100,ga.hunger+50);log(`Gave food to ${name}`,'co')}else nf(name);break
+    case 'rename':const ra=fa(name);if(ra&&extra){const old=ra.name;ra.name=extra.toUpperCase().slice(0,6);log(`Renamed ${old}→${ra.name}`,'co')}else log('/rename NAME NEW','cs');break
+    case 'setpers':case 'setpersonality':const spa=fa(name);if(spa&&ALL_PERS.includes(parts[2])){spa.personality=parts[2];log(`${name} is now ${parts[2]}`,'co')}else log('/setpers NAME type','cs');break
+    case 'arrest':const arst=fa(name);if(arst){arst.inPrison=true;arst.prisonTimer=Math.floor(rand(600,1400));const p=institutions.prison;if(p){arst.x=p.x+p.w/2+rand(-10,10);arst.y=p.y+p.h/2+rand(-10,10)};playArrest();log(`Arrested ${name}`,'co')}else nf(name);break
+    case 'release':const rel=fa(name);if(rel){rel.inPrison=false;rel.prisonTimer=0;log(`${name} released`,'co')}else if(!name){AIs.forEach(a=>{a.inPrison=false;a.prisonTimer=0});log('All released','co')}break
+    case 'setage':const saa=fa(name);const ag=parseFloat(parts[2]);if(saa&&!isNaN(ag)){saa.age=ag;log(`${name} age→${ag}`,'co')}else log('/setage NAME age','cs');break
+    case 'addmoney':const ama=fa(name);const am=parseFloat(parts[2]||'20');if(ama){ama.money+=am;playCash();log(`Gave 💰${am} to ${name}`,'co')}else if(!name){AIs.forEach(a=>a.money+=am);log(`💰${am} to all`,'co')}break
+    case 'graduation':AIs.filter(a=>a.age<18).forEach(a=>{a.age=18;a.hp=100;a.food=80});log('🎓 Graduation!','ca');beep(1000,.3,.08);break
+    case 'rewind':const nn=parseInt(parts[1]||'5');const ti=Math.max(0,snapshots.length-1-nn);replayMode=true;replayIdx=ti;applySnapshot(ti);sel('replaySlider').value=ti;setText('replayBtn','LIVE');log(`Rewound ${nn} snaps (T:${snapshots[ti]?.tick||0})`,'co');break
+    case 'summon':const mt=MTYPES.find(t=>t.name.toLowerCase().includes((name||'').toLowerCase()));if(mt){monster=Object.assign({},mt,{x:rand(20,W-20),y:rand(20,H-20),vx:0,vy:0,hp:mt.maxHp,tentacles:[],sCD:120,dC:0,dash:false,sC:0,sChance:.02,tC:0,telC:100,fzC:120,strmC:300});nightMonsterSpawned=true;playMonster();const mp=sel('monsterPanel');if(mp)mp.style.display='block';setText('monsterName',monster.emoji+' '+monster.name);const ma=sel('monsterAlert');if(ma)ma.style.display='inline';log(`Summoned ${monster.emoji} ${monster.name}`,'co')}else log('/summon zombie|bat|owl|kangaroo|robot|kraken|witch','cs');break
+    case 'protect':const pra=fa(name);if(pra){admins.add(pra.name);pra.hp=100;log(`${name} protected`,'co')}else nf(name);break
+    case 'weather':const wts=['clear','rain','snow','fog','storm'];if(wts.includes(name?.toLowerCase())){weatherType=name.toLowerCase();weatherTimer=9999;log(`Weather: ${weatherType}`,'co')}else log('/weather clear|rain|snow|fog|storm','cs');break
+    case 'story':showLatestStory();break
+    case 'help':log('/kill /ban /unban /admin /dismiss /heal /feed /freeze /tp /tpall /msg /give /rename /setpers /arrest /release /setage /addmoney /graduation /rewind /summon /protect /weather /story','cs');break
+    default:log(`Unknown: /${cmd} (try /help)`,'cs')
+  }
+}
+function killRandom(){const c=AIs.filter(a=>!a.isPlayer);if(!c.length)return;const i=Math.floor(rand(0,c.length));log(`Killed ${c[i].name}`,'co');AIs=AIs.filter(a=>a!==c[i]);playDie()}
+function banRandom(){const c=AIs.filter(a=>!a.isPlayer);if(!c.length)return;const ai=c.reduce((b,a)=>a.kills<b.kills?a:b,c[0]);banned.add(ai.name);AIs=AIs.filter(a=>a!==ai);log(`Banned ${ai.name}`,'co')}
+function hireAdmin(){if(!AIs.length)return;const ai=AIs.reduce((b,a)=>a.kills>b.kills?a:b,AIs[0]);admins.add(ai.name);log(`${ai.name} ★ Admin`,'ca');beep(880,.18,.06);beep(1100,.14,.05)}
+
+// ════════════════════════════════════════════════
+// CHAT
+// ════════════════════════════════════════════════
+function sendChat(){const inp=sel('chatMsg'),txt=inp?.value?.trim();if(!txt)return;inp.value='';log(`[You]: ${txt}`,'cy');const resp=AIs.filter(a=>!a.isPlayer).sort(()=>Math.random()-.5).slice(0,Math.min(3,AIs.length));resp.forEach((ai,i)=>setTimeout(()=>{const p=getPhrase(ai);log(`[${ai.name}]: ${p}`,'cai');ai.speech=p;ai.speechTimer=170},320+i*380))}
+
+// ════════════════════════════════════════════════
+// STATS UI
+// ════════════════════════════════════════════════
+function updateStats(){
+  setText('stPop',AIs.length);setText('stAnim',animals.length);setText('stFood',foods.length)
+  setText('stBuilds',builds.length);setText('stTeams',teams.length);setText('stGen',generation);setText('stDay',dayNum)
+  setText('stAgg',AIs.filter(a=>a.personality==='aggressive').length)
+  setText('stBld',AIs.filter(a=>a.personality==='builder').length)
+  setText('stSoc',AIs.filter(a=>a.personality==='social').length)
+  setText('stExp',AIs.filter(a=>a.personality==='explorer').length)
+  setText('stGrf',AIs.filter(a=>a.personality==='griefer').length)
+  setText('stCop',AIs.filter(a=>a.personality==='cop').length)
+  setText('stDoc',AIs.filter(a=>a.personality==='doctor').length)
+  setText('stAut',AIs.filter(a=>a.personality==='author').length)
+  setText('stLib',AIs.filter(a=>a.personality==='librarian').length)
+  setText('stBan',banned.size)
+  const bar=sel('dayBar');if(bar){bar.style.width=(dayPhase*100)+'%';bar.style.background=isNight()?'#2233aa':'#ffd700'}
+  const phases=['Dawn','Morning','Noon','Afternoon','Dusk','Evening','Midnight','Night'],pi=Math.floor(dayPhase*8)%8
+  const label=`Day ${dayNum} — ${phases[pi]}${isNight()?' 🌑':' ☀'}`
+  setText('dayLabel',label);setText('tbDayInfo',`${label}${weatherType!=='clear'?' · '+weatherType.toUpperCase():''}`)
+  updateTeamsUI();updateStoriesUI();updateInstStats()
+}
+
+// ════════════════════════════════════════════════
+// REWIND
+// ════════════════════════════════════════════════
+function takeSnapshot(){
+  if(snapshots.length>=MAX_SNAP)snapshots.shift()
+  snapshots.push({tick:tickCount,day:dayNum,phase:dayPhase,AIs:AIs.map(a=>({name:a.name,x:a.x,y:a.y,hp:a.hp,food:a.food,hunger:a.hunger,age:a.age,personality:a.personality,team:a.team,size:a.size,isPlayer:a.isPlayer})),foods:foods.map(f=>({x:f.x,y:f.y,color:f.color})),builds:builds.map(b=>({x:b.x,y:b.y,level:b.level,hp:b.hp})),animals:animals.map(a=>({emoji:a.emoji,x:a.x,y:a.y,size:a.size||4,tamed:a.tamed})),monster:monster?{emoji:monster.emoji,x:monster.x,y:monster.y,hp:monster.hp,maxHp:monster.maxHp,color:monster.color,size:monster.size}:null})
+  const sl=sel('replaySlider');if(sl){sl.max=snapshots.length-1;sl.value=snapshots.length-1}
+}
+function toggleReplay(){replayMode=!replayMode;setText('replayBtn',replayMode?'LIVE':'⏸')}
+function applySnapshot(idx){
+  const s=snapshots[Math.max(0,Math.min(idx,snapshots.length-1))];if(!s)return
+  setText('replayTick','T:'+s.tick)
+  ctx.clearRect(0,0,W,H);drawScene()
+  s.foods.forEach(f=>{ctx.fillStyle=f.color||'#44ff66';ctx.beginPath();ctx.arc(f.x,f.y,3,0,Math.PI*2);ctx.fill()})
+  s.builds.forEach(b=>{ctx.strokeStyle='#00ffd060';ctx.strokeRect(b.x-6,b.y-6,12,12)})
+  s.animals.forEach(a=>{ctx.font=`${a.size*2}px serif`;ctx.textAlign='center';ctx.fillText(a.emoji,a.x,a.y+5)})
+  s.AIs.forEach(a=>{const col=PC[a.personality]||'#aaaaaa';ctx.fillStyle=a.isPlayer?'#ffffff':col;ctx.shadowBlur=a.isPlayer?20:5;ctx.shadowColor=a.isPlayer?'#ffffff':col;ctx.beginPath();ctx.arc(a.x,a.y,a.size||4,0,Math.PI*2);ctx.fill();ctx.fillStyle=col;ctx.font='7px Share Tech Mono';ctx.textAlign='center';ctx.fillText(a.name,a.x,a.y-8)})
+  if(s.monster){ctx.font=`${s.monster.size*2.3}px serif`;ctx.textAlign='center';ctx.shadowColor=s.monster.color;ctx.shadowBlur=20;ctx.fillText(s.monster.emoji,s.monster.x,s.monster.y+s.monster.size)}
+}
+sel('replaySlider').addEventListener('input',e=>{if(replayMode){replayIdx=parseInt(e.target.value);applySnapshot(replayIdx)}})
+
+// ════════════════════════════════════════════════
+// SAVE / LOAD
+// ════════════════════════════════════════════════
+function saveWorld(){const w=allWorlds.find(x=>x.id===worldId);if(!w)return;w.day=dayNum;w.tick=tickCount;w.population=AIs.length;w.lastSaved=Date.now();saveAllWorlds(allWorlds);log('💾 Saved','cs')}
+function resizeCanvas(){const c=sel('center');if(!c)return;W=c.clientWidth;H=c.clientHeight-(sel('chatArea')?.offsetHeight||110)-(sel('topbar')?.offsetHeight||26)-(sel('replayBar')?.offsetHeight||22);canvas.width=W;canvas.height=H}
+function loadWorld(id,isPlay=false){
+  const w=allWorlds.find(x=>x.id===id);if(!w)return
+  worldId=id;worldName=w.name;worldBiome=w.biome||'forest'
+  AIs=[];foods=[];builds=[];banned=new Set();admins=new Set();teams=[];teamColorIdx=0
+  animals=[];monster=null;tickCount=0;generation=1;dayNum=w.day||1;dayPhase=0
+  nightMonsterSpawned=false;flashlights=[];paused=false;particles=[];frozenAIs=new Set()
+  weatherType='clear';weatherTimer=Math.floor(rand(1000,2500));snapshots=[];replayMode=false
+  lifeEvents={};stories=[];playMode=isPlay;playerAI=null;pendingInvite=null;joyVX=0;joyVY=0
+  goScreen('scGame')
+  setText('tbWorldName',worldName)
+  const mp=sel('monsterPanel');if(mp)mp.style.display='none'
+  const ma=sel('monsterAlert');if(ma)ma.style.display='none'
+  const ph=sel('playHUD');if(ph){ph.style.display='none';ph.classList.remove('active')}
+  const pt=sel('playTag');if(pt)pt.style.display='none'
+  sel('chatLog').innerHTML=''
+  const rs=sel('replaySlider');if(rs){rs.max=0;rs.value=0}
+  resizeCanvas();generateWaters();generateInstitutions();buildTexture();genStars()
+  const n=playerDiff==='easy'?12:playerDiff==='hard'?20:16
+  const foodN=playerDiff==='easy'?30:playerDiff==='hard'?10:20
+  for(let i=0;i<n;i++)spawnAI();spawnFood(foodN)
+  for(let i=0;i<10;i++)spawnAnimal(Math.floor(rand(0,ATYPES.length)))
+  spawnZooAnimals()
+  log(`Loaded: ${worldName} (${BIOME_EMOJI[worldBiome]} ${worldBiome})`,'cs')
+  if(!isPlay)log('📚 Authors write stories · 👮 Cops arrest criminals · 🏥 Doctors heal · /help','cs')
+}
+
+// ════════════════════════════════════════════════
+// MAIN LOOP
+// ════════════════════════════════════════════════
+const SPEED_MS=[50,33,20,13,7,3]
+let lastTime=0
+function loop(ts){
+  requestAnimationFrame(loop)
+  if(ts-lastTime<SPEED_MS[clamp(simSpeed-1,0,5)])return
+  lastTime=ts
+  const gameActive=sel('scGame')?.classList.contains('active')
+  if(!paused&&!replayMode&&gameActive){
+    tickCount++;dayPhase=(tickCount%DAY_LEN)/DAY_LEN
+    if(Math.floor(tickCount/DAY_LEN)>=dayNum){dayNum++;nightMonsterSpawned=false}
+    if(isNight()&&!nightMonsterSpawned)spawnMonster()
+    if(!isNight()&&monster){monster=null;const mp=sel('monsterPanel');if(mp)mp.style.display='none';const ma=sel('monsterAlert');if(ma)ma.style.display='none';log('Dawn — monster retreats!','cn')}
+    const dead=new Set()
+    for(const ai of AIs)updateAI(ai,dead)
+    if(playMode&&playerAI&&!playerAI._dead)updatePlayerAI()
+    dead.forEach(ai=>{if(!ai._loggedDeath){ai._loggedDeath=true;log(`${ai.name} died (${ai._deathCause||'natural'})`,'ck');logEvent(ai.name,`died: ${ai._deathCause||'natural causes'}`);playDie()}})
+    dead.forEach(ai=>{teams.forEach(t=>t.members.delete(ai.name))})
+    AIs=AIs.filter(a=>!dead.has(a))
+    flashlights=flashlights.filter(f=>f.timer>0)
+    teams=teams.filter(t=>{if(t.members.size===0){log(`Team "${t.name}" dissolved`,'ce');return false}return true})
+    for(const a of animals)updateAnimal(a)
+    animals=animals.filter(a=>!a._dead)
+    if(monster)updateMonster()
+    updateWeather()
+    if(tickCount%300===0)tryFormGrieferGang()
+    if(tickCount-lastFoodTick>110||foods.length<7){spawnFood(4);lastFoodTick=tickCount}
+    if(AIs.filter(a=>!a.isPlayer).length===0&&tickCount>20){log('⚠ Extinction! Respawning…','ce');for(let i=0;i<10;i++)spawnAI()}
+    if(tickCount%SNAP_EVERY===0)takeSnapshot()
+    if(tickCount%55===0)updateStats()
+  }
+  if(gameActive&&!replayMode)draw()
+}
+sel('speedSlider').addEventListener('input',e=>{simSpeed=+e.target.value})
+function togglePause(){paused=!paused;setText('pauseBtn',paused?'▶':'⏸')}
+window.addEventListener('resize',()=>{resizeCanvas();if(texCanvas)buildTexture()})
+
+// INIT
+renderWorldSelect()
+requestAnimationFrame(loop)
+if(allWorlds.length===0)setTimeout(openNewModal,350)
+</script>
+</body>
+</html>
